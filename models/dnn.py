@@ -39,6 +39,25 @@ class DNN(nn.Module):
         for hidden_layer in self.hidden_layers:
             x = F.relu(hidden_layer(x))
 
-        return self.fc_out(x)
+        x = self.fc_out(x)
+
+        
+        x1 = torch.exp(F.log_softmax(x[:9]))
+        x2 = torch.exp(F.log_softmax(x[9:18]))
+        x3 = torch.exp(F.log_softmax(x[18:27]))
+        x4 = torch.exp(F.log_softmax(x[27:36]))
+        x5 = torch.exp(F.log_softmax(x[36:45]))
+        x6 = torch.exp(F.log_softmax(x[45:54]))
+        x7 = torch.exp(F.log_softmax(x[54:63]))
+        x8 = torch.exp(F.log_softmax(x[63:72]))
+        x9 = torch.exp(F.log_softmax(x[72:81]))
+
+        # x = x.view(9, -1)
+        # one_hot = torch.Tensor([F.log_softmax(y) for y in x])
+
+        print(x1)
+        print(x2)
+
+        return x1,x2,x3,x4,x5,x6,x7,x8,x9
 
         # return self.fc3(x)
