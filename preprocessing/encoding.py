@@ -7,7 +7,7 @@ n_letters = len(all_letters)
 all_symbols = '0123456789,-'
 n_symbols = len(all_symbols)
 
-input_length = 207
+#input_length = 207
 
 
 # Find letter index from all_letters, e.g. "a" = 0
@@ -28,13 +28,9 @@ def letterToTensor(letter):
 #         tensor[li][0][letterToIndex(letter)] = 1
 #     return tensor
 
-def seqToTensor(line):
-    tensor = torch.zeros(input_length, n_symbols)
+def seqToTensor(line, input_length, symbols = '0123456789,-'):
+    tensor = torch.zeros(input_length, len(symbols))
     for li, letter in enumerate(line):
         tensor[li][letterToIndex(letter)] = 1
     return tensor
 
-print(letterToTensor('-'))
-
-print(seqToTensor('54,-2'))
-print(seqToTensor('542').size())

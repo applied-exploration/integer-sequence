@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class DNN(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, input_size, output_size, seed, hidden_layer_param = []):
+    def __init__(self, input_size, output_size, seed = 5, hidden_layer_param = []):
         """Initialize parameters and build model.
         Params
         ======
