@@ -34,3 +34,11 @@ def seqToTensor(line, input_length, symbols = '0123456789,-'):
         tensor[li][letterToIndex(letter)] = 1
     return tensor
 
+def sequencesToTensor(lines, input_length=0, symbols = '0123456789,-'):
+    if input_length == 0: input_length = len(lines[0])
+    tensor = torch.zeros(len(lines), input_length, len(symbols))
+    for i, line in enumerate(lines):
+        for j, letter in enumerate(line):
+            tensor[i][j][letterToIndex(letter)] = 1
+    return tensor
+

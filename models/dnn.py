@@ -42,33 +42,17 @@ class DNN(nn.Module):
 
         x = self.fc_out(x)
 
-        
-        x1 = torch.exp(F.log_softmax(x[:9], dim=0))
-        x2 = torch.exp(F.log_softmax(x[9:18], dim=0))
-        x3 = torch.exp(F.log_softmax(x[18:27], dim=0))
-        x4 = torch.exp(F.log_softmax(x[27:36], dim=0))
-        x5 = torch.exp(F.log_softmax(x[36:45], dim=0))
-        x6 = torch.exp(F.log_softmax(x[45:54], dim=0))
-        x7 = torch.exp(F.log_softmax(x[54:63], dim=0))
-        x8 = torch.exp(F.log_softmax(x[63:72], dim=0))
-        x9 = torch.exp(F.log_softmax(x[72:81], dim=0))
+        x = x.view(x.size(0), 9, -1)
+        one_hot = F.softmax(x, dim=2)
 
-        # x = x.view(9, -1)
-        # one_hot = torch.Tensor([F.log_softmax(y) for y in x])
-
-        sequence = self.decode([x1, x2, x3, x4, x5, x6, x7, x8, x9
-])
-
-
-        return sequence
-        # return self.fc3(x)
+        return one_hot
     
-    def decode(self, encoded_array):
 
-        sequence = ''
-        for encoded_symbol in encoded_array:
-            value, index = torch.max(encoded_symbol, dim=0)
-            sequence += self.symbol_set[index]
+    # def decode(self, encoded_array):
 
-        print(sequence)
-        return int(sequence)
+    #     sequence = ''
+    #     for encoded_symbol in encoded_array:
+    #         value, index = torch.max(encoded_symbol, dim=0)
+    #         sequence += self.symbol_set[index]
+
+    #     return int(sequence)
