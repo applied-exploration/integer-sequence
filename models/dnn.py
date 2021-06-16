@@ -64,9 +64,11 @@ class DNN(nn.Module):
         # return self.fc3(x)
     
     def decode(self, encoded_array):
+
         sequence = ''
-        for symbol in encoded_array:
-            values, index = torch.max(symbol)
+        for encoded_symbol in encoded_array:
+            value, index = torch.max(encoded_symbol, dim=0)
             sequence += self.symbol_set[index]
 
+        print(sequence)
         return int(sequence)

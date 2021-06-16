@@ -10,7 +10,7 @@ class CSVDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        row = self.data[self.data.columns[0]][idx]
+        value = self.data[self.data.columns[0]][idx]
         label = self.data[self.data.columns[1]][idx]
 
-        return row, label
+        return value, label
