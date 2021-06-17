@@ -65,4 +65,5 @@ def eq_decoder(encoded: List[int]) -> str:
         output[i] = ix_to_char[ch]
     return output
 
-# eq_decoder(eq_encoder('1*23t+23'))
+# print(eq_decoder(eq_encoder('1*23t+23')))
+# print(eq_encoder('1*23t+23'))
