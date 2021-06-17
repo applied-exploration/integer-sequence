@@ -1,13 +1,16 @@
-from phenotype import Phenotype
-from genotype import Genotype, crossover
+from .phenotype import Phenotype
+from .genotype import Genotype, crossover
+from typing import List, Dict
 
 class Individual:
 
-    def __init__(self, population_size):
+    def __init__(self, param):
         
+        self.param = param
+
         self.fitness : float = 0.0
-        self.genotype: Genotype = Genotype()
-        self.phenotype: Phenotype = Phenotype(self.genotype)
+        self.genotype: Genotype = Genotype(param)
+        self.phenotype: Phenotype = Phenotype(param, self.genotype)
 
         self.evaluate()
 
@@ -18,12 +21,12 @@ class Individual:
         self.fitness = self.phenotype.evaluate()
 
 
-def breed(a: Individual, b: Individual) -> Individual:
-    c: Individual = Individual()
+def breed(param, a: Individual, b: Individual) -> Individual:
+    c: Individual = Individual(param)
 
-    c.m_genotype = crossover(a.m_genotype, b.m_genotype)
-    c.m_genotype.mutate()
-    c.m_phenotype = Phenotype(c.m_genotype)
+    c.genotype = crossover(param, a.genotype, b.genotype)
+    c.genotype.mutate_()
+    c.phenotype = Phenotype(param, c.genotype)
 
     return c
 
