@@ -20,15 +20,14 @@ def generate_random_eq(length: int) -> str:
     return ''.join(result)
 
 def generate_random_eq_valid(length: int) -> str:
-    eq = generate_random_eq(length)
-    valid = is_eq_valid(eq, [1,2,4,5,10])
+    valid = False
     while valid == False:
         eq = generate_random_eq(length)
-        valid = is_eq_valid(eq, [1,2,4,5,10])
+        valid = is_eq_valid(eq)
     return eq
 
 
-def is_eq_valid(eq: str, test_set: List[int]) -> bool:
+def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
     try:
         if "t" not in eq:
             return False
@@ -45,6 +44,15 @@ def is_eq_valid(eq: str, test_set: List[int]) -> bool:
         return False
 
 
+def eq_to_seq(eq: str, length: int) -> List[int]:
+    int_seq: List[int] = []
+    for i in range(1, length+1):
+        try:
+            int_seq.append(int(parse_expr(eq, local_dict = {'t': i})))
+        except:
+            pass
+    if len(int_seq) != length: return [0] * length
+    return int_seq
 
 syms = list('+*-0123456789t')
 # char to index and index to char maps
