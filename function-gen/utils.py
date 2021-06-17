@@ -19,6 +19,15 @@ def generate_random_eq(length: int) -> str:
         result.append(last_char)
     return ''.join(result)
 
+def generate_random_eq_valid(length: int) -> str:
+    eq = generate_random_eq(length)
+    valid = is_eq_valid(eq, [1,2,4,5,10])
+    while valid == False:
+        eq = generate_random_eq(length)
+        valid = is_eq_valid(eq, [1,2,4,5,10])
+    return eq
+
+
 def is_eq_valid(eq: str, test_set: List[int]) -> bool:
     try:
         if "t" not in eq:
