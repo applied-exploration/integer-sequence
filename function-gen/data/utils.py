@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 
-def generate_random_eq(length: int) -> List[int]:
+def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
             return choice(['+', '-', '*'])
@@ -12,8 +12,10 @@ def generate_random_eq(length: int) -> List[int]:
             return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't'])
         elif prev == 't':
             return choice(['+', '-', '*'])
+        else:
+            raise ValueError('Unexpected prev character')
 
-    result = []
+    result: List[str] = []
     for i in range(0, length):
         last_char = generate_next('s') if i == 0 else generate_next(result[i-1])
         result.append(last_char)

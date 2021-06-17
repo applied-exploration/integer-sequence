@@ -7,8 +7,6 @@ n_letters = len(all_letters)
 all_symbols = '0123456789,-'
 n_symbols = len(all_symbols)
 
-#input_length = 207
-
 
 # Find letter index from all_letters, e.g. "a" = 0
 def letterToIndex(letter):
