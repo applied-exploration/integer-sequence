@@ -42,9 +42,9 @@ class DNN(nn.Module):
 
         x = self.fc_out(x)
 
-        x = x.view(x.size(0), 9, -1)
+        # x = x.view(x.size(0), 9, -1)
         one_hot = F.softmax(x, dim=2)
-
+        
         return one_hot
     
 
