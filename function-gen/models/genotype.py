@@ -10,19 +10,21 @@ class Genotype:
         # self.m_genes: List[int] = [math.floor(random.random() * param['symbol_set_size']) for _ in range(param['encoded_seq_length'])]
 
         random_function = generate_random_eq_valid(param['encoded_seq_length'])
+        # print("random_function ", random_function)
         encoded_function_to_genes = eq_encoder(random_function)
-        self.m_genes: List[int] = generate_random_eq
+        # print("encoded_function ", encoded_function_to_genes)
+        self.m_genes: List[int] = encoded_function_to_genes
 
     def mutate_(self):
         # 5% mutation rate
 
         valid = False
         while valid == False:
-            for gene in self.m_genes:
+            for i, gene in enumerate(self.m_genes):
                 if random.random() * 100 < self.param['mutation_rate']:
-                    gene = math.random * self.param['symbol_set_size']
+                    self.m_genes[i] = math.floor(random.random() * self.param['symbol_set_size'])
             
-            valid = is_eq_valid(eq_decoder(self.m_genes, [1, 2, 4, 5, 10]))
+            valid = is_eq_valid(eq_decoder(self.m_genes))
 
 
 
@@ -34,10 +36,14 @@ def crossover(param, a: Genotype, b: Genotype) -> Genotype:
     while valid == False:
         for i, gene in enumerate(c.m_genes):
             if random.random() < 0.5:
-                gene = a.m_genes[i]
+                c.m_genes[i] = a.m_genes[i]
             else:
-                gene = b.m_genes[i]
+                c.m_genes[i] = b.m_genes[i]
 
-        valid = is_eq_valid(eq_decoder(gene.m_genes, [1, 2, 4, 5, 10]))
+        # print("A GENES: ", eq_decoder(a.m_genes))
+        # print("B GENES: ", eq_decoder(b.m_genes))
+        # print("C GENES: ", eq_decoder(c.m_genes))
+        valid = is_eq_valid(eq_decoder(c.m_genes))
 
+    # print("Successful crossover")
     return c

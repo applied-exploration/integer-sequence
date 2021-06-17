@@ -1,7 +1,7 @@
 import math
 from .genotype import Genotype
 from typing import List, Dict
-from utils import eq_decoder
+from utils import eq_decoder, eq_to_seq
 
 class Phenotype:
 
@@ -13,11 +13,20 @@ class Phenotype:
     def display(self):
         print(self.decoded_representation)
 
-    def evaluate(self, output_sequence, target_sequence):
-        target_sequence = self.param["target_sequence"]
-        fitness: float = 0.0
 
-        fitness += 0.0 # eg.: closeness to actual target value
+    def evaluate(self):
+        target_sequence = self.param["target_sequence"]
+        output = eq_to_seq(self.decoded_representation, len(self.param["target_sequence"])) 
+
+        fitness: float = 0.0
+        
+        for i, value in enumerate(target_sequence):
+            fitness -= (value - output[i])**2
+
+        fitness /= len(target_sequence)
+
+        #fitness += 0.0 # eg.: closeness to actual target value
         #fitness -= 0.0 # eg.: number of symbols
 
         return fitness
+

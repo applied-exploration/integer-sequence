@@ -71,7 +71,7 @@ def eq_decoder(encoded: List[int]) -> str:
     output = encoded.copy()
     for i, ch in enumerate(encoded):
         output[i] = ix_to_char[ch]
-    return output
+    return ''.join(output)
 
 # print(eq_decoder(eq_encoder('1*23t+23')))
 # print(eq_encoder('1*23t+23'))

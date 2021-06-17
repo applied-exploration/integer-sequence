@@ -9,6 +9,7 @@ class Population:
     def __init__(self, param, population_size: int = 100 ):
 
         self.param = param
+        self.population_size = population_size
         self.m_pop: List[Individual] = [Individual(param)
                                         for _ in range(population_size)]
 
@@ -30,5 +31,5 @@ class Population:
 
     def select(self) -> Individual:
         index: int = math.floor(
-            (100.0 - 1e-6) * (1.0 - math.pow(random.random(), 2)))
+            (float(self.population_size) - 1e-6) * (1.0 - math.pow(random.random(), 2)))
         return self.m_pop[index]
