@@ -10,9 +10,9 @@ class Genotype:
         # self.m_genes: List[int] = [math.floor(random.random() * param['symbol_set_size']) for _ in range(param['encoded_seq_length'])]
 
         random_function = generate_random_eq_valid(param['encoded_seq_length'])
-        # print("random_function ", random_function)
+
         encoded_function_to_genes = eq_encoder(random_function)
-        # print("encoded_function ", encoded_function_to_genes)
+
         self.m_genes: List[int] = encoded_function_to_genes
 
     def mutate_(self):
@@ -40,10 +40,6 @@ def crossover(param, a: Genotype, b: Genotype) -> Genotype:
             else:
                 c.m_genes[i] = b.m_genes[i]
 
-        # print("A GENES: ", eq_decoder(a.m_genes))
-        # print("B GENES: ", eq_decoder(b.m_genes))
-        # print("C GENES: ", eq_decoder(c.m_genes))
         valid = is_eq_valid(eq_decoder(c.m_genes))
 
-    # print("Successful crossover")
     return c

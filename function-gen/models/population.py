@@ -13,16 +13,12 @@ class Population:
         self.m_pop: List[Individual] = [Individual(param)
                                         for _ in range(population_size)]
 
-        # self.m_pop = make_valid(m_pop)
-
         self.m_pop.sort(key=lambda x: x.fitness)
 
     def evolve_(self):
         a: Individual = self.select()
         b: Individual = self.select()
         x: Individual = breed(self.param, a, b )
-
-        # if is_valid(x): x = breed(a,b)
 
         x.evaluate()
 
