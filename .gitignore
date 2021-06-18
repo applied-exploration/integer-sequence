@@ -127,3 +127,23 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+function-gen/seq2seq_translation_tutorial.ipynb
+function-gen/tut-data/eng-fra.txt
+function-gen/tut-data/names/Arabic.txt
+function-gen/tut-data/names/Chinese.txt
+function-gen/tut-data/names/Czech.txt
+function-gen/tut-data/names/Dutch.txt
+function-gen/tut-data/names/English.txt
+function-gen/tut-data/names/French.txt
+function-gen/tut-data/names/German.txt
+function-gen/tut-data/names/Greek.txt
+function-gen/tut-data/names/Irish.txt
+function-gen/tut-data/names/Italian.txt
+function-gen/tut-data/names/Japanese.txt
+function-gen/tut-data/names/Korean.txt
+function-gen/tut-data/names/Polish.txt
+function-gen/tut-data/names/Portuguese.txt
+function-gen/tut-data/names/Russian.txt
+function-gen/tut-data/names/Scottish.txt
+function-gen/tut-data/names/Spanish.txt
+function-gen/tut-data/names/Vietnamese.txt
