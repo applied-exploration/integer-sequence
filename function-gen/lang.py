@@ -45,16 +45,21 @@ def bin_decoder(encoded: List[int]) -> str:
 
 
 class Lang:
-    def __init__(self, name):
+    def __init__(self, name, split_char):
         self.name = name
         self.word2index = {}
         self.word2count = {}
         self.index2word = {0: "SOS", 1: "EOS"}
         self.n_words = 2  # Count SOS and EOS
+        self.split_char = split_char
 
     def addSentence(self, sentence):
-        for word in sentence.split(' '):
-            self.addWord(word)
+        if self.split_char != '':
+            for word in sentence.split(self.split_char):
+                self.addWord(word)
+        else:
+            for word in list(sentence):
+                self.addWord(word)
 
     def addWord(self, word):
         if word not in self.word2index:
@@ -71,16 +76,18 @@ def load_data():
     y = data["eqs"]
     X = data.drop('eqs', axis = 1)
     X = X[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
-    seq = Lang("seq")
+    seq = Lang("seq", ',')
     for row in X:
-        seq.addSentence(''.join([str(item) for item in row]))
+        seq.addSentence(','.join([str(item) for item in row]))
 
-    eq = Lang("eq")
+    eq = Lang("eq", '')
     for row in y:
         eq.addSentence(row)
 
     X_str = [','.join([str(item) for item in row]) for row in X]
     return eq, seq, list(zip(X_str, y))
+
+
 
 # class IntSeq:
 #     def __init__(self, name):
