@@ -21,7 +21,7 @@ class Phenotype:
         fitness: float = 0.0
         
         for i, value in enumerate(target_sequence):
-            fitness -= (value - output[i])**2
+            fitness -= min(1000, (value - output[i])**2)
 
         fitness /= len(target_sequence)
 
