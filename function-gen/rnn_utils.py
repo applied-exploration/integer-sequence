@@ -4,12 +4,16 @@ import torch.nn.functional as F
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-EOS_token = '<EOS>'
-SOS_token = '<SOS>'
+EOS_token = 0
+SOS_token = 1
 
 
 def indexesFromSentence(lang, sentence):
-    return [lang.word2index[word] for word in sentence.split(',')]
+    if ',' in sentence: 
+        return [lang.word2index[word] for word in sentence.split(',')]
+    else:
+        return [lang.word2index[word] for word in list(sentence)]
+
 
 
 def tensorFromSentence(lang, sentence):
