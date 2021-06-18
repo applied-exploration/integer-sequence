@@ -49,7 +49,7 @@ def eq_to_seq(eq: str, length: int) -> List[int]:
     for i in range(0, length):
         try:
             prev_2 = int_seq[i-2] if i > 2 else 0
-            prev_1 = int_seq[i-1] if i > 1 else 0
+            prev_1 = int_seq[i-1] if i > 1 else 1
             int_seq.append(int(parse_expr(eq, local_dict = {'t': i+1, 'x': prev_1, 'y': prev_2 })))
         except:
             pass
