@@ -7,8 +7,8 @@ def generate_random_eq(length: int) -> str:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
             return choice(['+', '-', '*'])
         elif prev in ['s', '+', '-', '*']:
-            return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't'])
-        elif prev == 't':
+            return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't', 'x', 'x', 'x', 'x', 'y', 'y', 'y', 'y'])
+        elif prev in ['t', 'x', 'y']:
             return choice(['+', '-', '*'])
         else:
             raise ValueError('Unexpected prev character')
@@ -46,15 +46,17 @@ def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
 
 def eq_to_seq(eq: str, length: int) -> List[int]:
     int_seq: List[int] = []
-    for i in range(1, length+1):
+    for i in range(0, length):
         try:
-            int_seq.append(int(parse_expr(eq, local_dict = {'t': i})))
+            prev_2 = int_seq[i-2] if i > 2 else 0
+            prev_1 = int_seq[i-1] if i > 1 else 0
+            int_seq.append(int(parse_expr(eq, local_dict = {'t': i+1, 'x': prev_1, 'y': prev_2 })))
         except:
             pass
     if len(int_seq) != length: return [0] * length
     return int_seq
 
-syms = list('+*-0123456789t')
+syms = list('+*-0123456789txy')
 # char to index and index to char maps
 char_to_ix = { ch:i for i,ch in enumerate(syms) }
 ix_to_char = { i:ch for i,ch in enumerate(syms) }
