@@ -12,7 +12,7 @@ SOS_token = 1
 MAX_LENGTH = 10
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH):
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, calc_magnitude = None, max_length=MAX_LENGTH):
     encoder_hidden = encoder.initHidden()
 
     encoder_optimizer.zero_grad()
@@ -37,6 +37,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
+    decoder_outputs = []
+
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
@@ -44,6 +46,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             #     decoder_input, decoder_hidden, encoder_outputs) # for attention decoder
             decoder_output, decoder_hidden = decoder(
                 decoder_input, decoder_hidden)  # this if or simply decoder
+            
+            decoder_outputs.append(decoder_output)
             loss += criterion(decoder_output, target_tensor[di])
             decoder_input = target_tensor[di]  # Teacher forcing
 
@@ -54,12 +58,18 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             #     decoder_input, decoder_hidden, encoder_outputs) # for attention decoder
             decoder_output, decoder_hidden = decoder(
                 decoder_input, decoder_hidden)  # this if or simply decoder
+            decoder_outputs.append(decoder_output)
+
             topv, topi = decoder_output.topk(1)
             decoder_input = topi.squeeze().detach()  # detach from history as input
 
             loss += criterion(decoder_output, target_tensor[di])
             if decoder_input.item() == EOS_token:
                 break
+
+    if calc_magnitude is not None:
+        magnitude = calc_magnitude(decoder_outputs, target_tensor)
+        loss = loss * magnitude
 
     loss.backward()
 
