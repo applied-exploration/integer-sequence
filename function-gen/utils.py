@@ -109,3 +109,18 @@ def timeSince(since, percent):
     es = s / (percent)
     rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
+
+
+
+
+def normalize_0_1(a: np.ndarray) -> np.ndarray:
+    # Normalised [0,1]
+    return (a - np.min(a))/np.ptp(a)
+
+def normalize_1_255(a: np.ndarray) -> np.ndarray:
+    # Normalised [0,255] as integer: don't forget the parenthesis before astype(int)
+    return (255*(a - np.min(a))/np.ptp(a)).astype(int)
+
+def normalize_minus1_1(a: np.ndarray) -> np.ndarray:
+    # Normalised [-1,1]
+    return 2.*(a - np.min(a))/np.ptp(a)-1

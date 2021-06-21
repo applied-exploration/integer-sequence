@@ -12,7 +12,7 @@ SOS_token = 1
 MAX_LENGTH = 10
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, calc_magnitude = None, max_length=MAX_LENGTH):
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = None, max_length=MAX_LENGTH):
     encoder_hidden = encoder.initHidden()
 
     encoder_optimizer.zero_grad()
@@ -68,7 +68,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
                 break
 
     if calc_magnitude is not None:
-        magnitude = calc_magnitude(decoder_outputs, target_tensor)
+        magnitude = calc_magnitude(decoder_outputs, target_tensor, input_lang, output_lang)
         loss = loss * magnitude
 
     loss.backward()
