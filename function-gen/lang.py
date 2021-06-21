@@ -2,8 +2,7 @@ SOS_token = 0
 EOS_token = 1
 
 import pandas as pd
-
-from typing import List
+from typing import List, Tuple
 
 def int_to_binary_str(num: int, width: int) -> str:
     if num >= 0:
@@ -71,34 +70,62 @@ class Lang:
             self.word2count[word] += 1
 
 
-def load_data():
-    data = pd.read_csv('./data/eqs.csv')
-    y = data["eqs"]
-    X = data.drop('eqs', axis = 1)
-    X = X[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[Tuple[List[int], str]]]:
+    train_data = pd.read_csv('./data/eqs.csv')
+    test_data = pd.read_csv('./data/eqs-test.csv')
+    
+    y_train = train_data["eqs"]
+    X_train = train_data.drop('eqs', axis = 1)
+    X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+
+    y_test = test_data["eqs"]
+    X_test = test_data.drop('eqs', axis = 1)
+    X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+
     seq = Lang("seq", ',')
-    for row in X:
+    for row in X_train:
+        seq.addSentence(','.join([str(item) for item in row]))
+    for row in X_test:
         seq.addSentence(','.join([str(item) for item in row]))
 
     eq = Lang("eq", '')
-    for row in y:
+    for row in y_train:
+        eq.addSentence(row)
+    for row in y_test:
         eq.addSentence(row)
 
-    X_str = [','.join([str(item) for item in row]) for row in X]
-    return eq, seq, list(zip(X_str, y))
+    return eq, seq, list(zip(X_train, y_train)), list(zip(X_test, y_test))
 
 
 
-# class IntSeq:
-#     def __init__(self, name):
-#         self.name = name
-#         self.word2index = {}
-#         self.word2count = {}
-#         self.index2word = {0: "SOS", 1: "EOS"}
-#         self.n_words = 2  # Count SOS and EOS
+# deprecated, old version
+def load_data() -> Tuple[Lang, Lang, List[Tuple[str, str]], List[Tuple[str, str]]]:
+    train_data = pd.read_csv('./data/eqs.csv')
+    test_data = pd.read_csv('./data/eqs-test.csv')
+    
+    y_train = train_data["eqs"]
+    X_train = train_data.drop('eqs', axis = 1)
+    X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
 
-#     def addSeq(self, seq):
-#         [torch.Tensor(bin_encoder(int_to_binary_str(x, 6))) for x in seq]
+    y_test = test_data["eqs"]
+    X_test = test_data.drop('eqs', axis = 1)
+    X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+
+    seq = Lang("seq", ',')
+    for row in X_train:
+        seq.addSentence(','.join([str(item) for item in row]))
+    for row in X_test:
+        seq.addSentence(','.join([str(item) for item in row]))
+
+    eq = Lang("eq", '')
+    for row in y_train:
+        eq.addSentence(row)
+    for row in y_test:
+        eq.addSentence(row)
+
+    X_train_str = [','.join([str(item) for item in row]) for row in X_train]
+    X_test_str = [','.join([str(item) for item in row]) for row in X_train]
+
+    return eq, seq, list(zip(X_train_str, y_train)), list(zip(X_test_str, y_test))
 
 
-# IntSeq("aawd")
