@@ -69,6 +69,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     if calc_magnitude is not None:
         magnitude = calc_magnitude(decoder_outputs, target_tensor)
+        # if magnitude.item()<9.0: print(magnitude)
         loss = loss * magnitude
 
     loss.backward()
