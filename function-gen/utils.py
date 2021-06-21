@@ -7,8 +7,8 @@ def generate_random_eq(length: int) -> str:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
             return choice(['+', '-', '*'])
         elif prev in ['s', '+', '-', '*']:
-            return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't', 'x', 'x', 'x', 'x', 'y', 'y', 'y', 'y'])
-        elif prev in ['t', 'x', 'y']:
+            return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't'])
+        elif prev in ['t']:
             return choice(['+', '-', '*'])
         else:
             raise ValueError('Unexpected prev character')
