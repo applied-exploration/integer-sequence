@@ -4,6 +4,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from learning_types import LearningAlgorithm
 from typing import List, Tuple
+from lang import Lang
 
 class GA_Plain(LearningAlgorithm):
 
@@ -15,10 +16,10 @@ class GA_Plain(LearningAlgorithm):
         self.num_epochs = num_epochs
         self.population_size = population_size
 
-    def train(self, data: List[Tuple[List[int], str]]) -> None:
+    def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         pass
 
-    def infer(self, data: List[List[int]]) -> List[str]:
+    def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
         output: List[str] = []
         for i, seq in enumerate(data):
             param =  {
