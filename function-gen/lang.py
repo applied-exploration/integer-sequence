@@ -70,7 +70,7 @@ class Lang:
             self.word2count[word] += 1
 
 
-def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[Tuple[List[int], str]]]:
+def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
     train_data = pd.read_csv('./data/eqs.csv')
     test_data = pd.read_csv('./data/eqs-test.csv')
     
@@ -94,7 +94,7 @@ def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[T
     for row in y_test:
         eq.addSentence(row)
 
-    return eq, seq, list(zip(X_train, y_train)), list(zip(X_test, y_test))
+    return eq, seq, list(zip(X_train, y_train)), X_test, y_test
 
 
 

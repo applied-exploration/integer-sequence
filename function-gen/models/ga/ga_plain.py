@@ -27,7 +27,7 @@ class GA_Plain(LearningAlgorithm):
                 "encoded_seq_length" : self.encoded_seq_length,
                 "mutation_rate": self.mutation_rate,
                 "output_sequence_length": self.output_sequence_length,
-                "target_sequence": seq[0],
+                "target_sequence": seq,
             }
             new_pop = Population(param, self.population_size)
             for _ in range(self.num_epochs):
