@@ -19,7 +19,7 @@ SOS_token = 1
 
 def indexesFromSentence(lang, sentence):
     if ',' in sentence: 
-        return [lang.word2index[word] for word in sentence.split(',')]
+        return [lang.word2index[word] for word in sentence.split(',') if word is not '']
     else:
         return [lang.word2index[word] for word in list(sentence)]
 
