@@ -47,7 +47,8 @@ class RNN_Plain(LearningAlgorithm):
         self.decoder = DecoderRNN(self.hidden_size, self.output_size).to(device)
 
         if calc_magnitude_on:
-            self.calc_magnitude= calc_magnitude
+            self.calc_magnitude = calc_magnitude
+        else: self.calc_magnitude = None
 
     def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
         converted_data = []
