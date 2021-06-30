@@ -80,7 +80,7 @@ class RNN_Attention(LearningAlgorithm):
             input_tensor = training_pair[0]
             target_tensor = training_pair[1]
 
-            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, True, self.calc_magnitude )
+            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = True, calc_magnitude= self.calc_magnitude )
             print_loss_total += loss
             plot_loss_total += loss
 

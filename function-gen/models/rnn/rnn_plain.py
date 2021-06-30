@@ -49,7 +49,8 @@ class RNN_Plain(LearningAlgorithm):
 
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
-        else: self.calc_magnitude = None
+        else:
+            self.calc_magnitude = None
 
     def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
         converted_data = []
@@ -82,9 +83,7 @@ class RNN_Plain(LearningAlgorithm):
             training_pair = training_pairs[iter - 1]
             input_tensor = training_pair[0]
             target_tensor = training_pair[1]
-
-            loss = train(input_tensor, target_tensor, self.encoder,
-                        self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, self.calc_magnitude )
+            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
             print_loss_total += loss
             plot_loss_total += loss
 
