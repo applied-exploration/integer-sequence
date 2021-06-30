@@ -9,7 +9,7 @@ class Genotype:
         self.param = param
         # self.m_genes: List[int] = [math.floor(random.random() * param['symbol_set_size']) for _ in range(param['encoded_seq_length'])]
 
-        if len(init_genotype) > 0: 
+        if init_genotype != None: 
             self.m_genes: List[int] = init_genotype
         else: 
             random_function = generate_random_eq_valid(param['encoded_seq_length'])
@@ -20,6 +20,10 @@ class Genotype:
     def mutate_(self):
         # 5% mutation rate
 
+
+        original_genes =  self.m_genes.copy()
+
+        counter = 0
         valid = False
         while valid == False:
             for i, gene in enumerate(self.m_genes):
@@ -28,11 +32,19 @@ class Genotype:
             
             valid = is_eq_valid(eq_decoder(self.m_genes))
 
+            # print(counter)
+            counter += 1
+            if counter > 25: 
+                self.m_genes = original_genes.copy()
+                break
+
 
 
 def crossover(param, a: Genotype, b: Genotype) -> Genotype:
 
     c: Genotype = Genotype(param)
+
+    counter = 0
 
     valid = False
     while valid == False:
@@ -43,5 +55,13 @@ def crossover(param, a: Genotype, b: Genotype) -> Genotype:
                 c.m_genes[i] = b.m_genes[i]
 
         valid = is_eq_valid(eq_decoder(c.m_genes))
+
+        counter += 1
+        if counter > 25:
+            if random.random() < 0.5:
+                c.m_genes = a.m_genes.copy()
+            else:
+                c.m_genes = b.m_genes.copy()
+            break
 
     return c
