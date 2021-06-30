@@ -1,26 +1,23 @@
+
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from typing import List, Tuple
-from learning_types import LearningAlgorithm
-
-
 import math
 import time
 import random
+from typing import List, Tuple
+from learning_types import LearningAlgorithm
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.distributions import Categorical
 import torch.optim as optim
 
-from .encoder_decoder_gru import EncoderRNN, DecoderRNN
+from .encoder_decoder_gru import AttnDecoderRNN, EncoderRNN, DecoderRNN
 from .combined_networks import train
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
-from utils import showPlot, timeSince, asMinutes
-# from lang import load_data
+from utils import timeSince
 from lang import Lang
 
 
@@ -31,7 +28,7 @@ SOS_token = 1
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class RNN_Plain(LearningAlgorithm):
+class RNN_Attention(LearningAlgorithm):
 
     def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, learning_rate: float = 0.01, calc_magnitude_on = False):
         self.symbols = symbols
@@ -45,12 +42,11 @@ class RNN_Plain(LearningAlgorithm):
         self.input_size = input_size
         self.output_size = output_size
         self.encoder = EncoderRNN(self.input_size, self.hidden_size).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size).to(device)
+        self.decoder = AttnDecoderRNN(self.hidden_size, self.output_size, dropout_p=0.1).to(device)
 
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
-        else:
-            self.calc_magnitude = None
+        else: self.calc_magnitude = None
 
     def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
         converted_data = []
@@ -83,7 +79,8 @@ class RNN_Plain(LearningAlgorithm):
             training_pair = training_pairs[iter - 1]
             input_tensor = training_pair[0]
             target_tensor = training_pair[1]
-            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
+
+            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = True, calc_magnitude= self.calc_magnitude )
             print_loss_total += loss
             plot_loss_total += loss
 
@@ -104,6 +101,7 @@ class RNN_Plain(LearningAlgorithm):
     def infer(self, data: List[List[int]], input_lang: Lang, output_lang: Lang) -> List[str]:
         max_length=  10
         output_list = []
+        attentions = []
 
         for input_sequence in data:
             sentence = ''.join(str(x)+',' for x in input_sequence)
@@ -129,13 +127,9 @@ class RNN_Plain(LearningAlgorithm):
                 decoder_attentions = torch.zeros(max_length, max_length)
 
                 for di in range(max_length):
-                    # decoder_output, decoder_hidden, decoder_attention = self.decoder(
-                    #     decoder_input, decoder_hidden, encoder_outputs)
-                    # decoder_attentions[di] = decoder_attention.data
-
-                    decoder_output, decoder_hidden = self.decoder(
-                        decoder_input, decoder_hidden)  # this if or simply decoder
-                        
+                    decoder_output, decoder_hidden, decoder_attention = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
+                    decoder_attentions[di] = decoder_attention.data
+                    
                     topv, topi = decoder_output.data.topk(1)
                     if topi.item() == EOS_token:
                         decoded_words.append('<EOS>')
@@ -147,7 +141,7 @@ class RNN_Plain(LearningAlgorithm):
 
                 stringified_output = ''.join(decoded_words[:-1])
                 output_list.append(stringified_output)
+                attentions.append(decoder_attentions[:di + 1])
                 # output_sequence = eq_to_seq(stringified_output, 9)
 
-        return output_list #decoded_words, output_sequence, decoder_attentions[:di + 1]
-        
+        return output_list

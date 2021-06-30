@@ -12,7 +12,7 @@ SOS_token = 1
 MAX_LENGTH = 10
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = None, max_length=MAX_LENGTH):
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, calc_magnitude = None, max_length=MAX_LENGTH):
     encoder_hidden = encoder.initHidden()
 
     encoder_optimizer.zero_grad()
@@ -42,10 +42,10 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
-            # decoder_output, decoder_hidden, decoder_attention = decoder(
-            #     decoder_input, decoder_hidden, encoder_outputs) # for attention decoder
-            decoder_output, decoder_hidden = decoder(
-                decoder_input, decoder_hidden)  # this if or simply decoder
+            if with_attention == True:
+                decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
+            else:
+                decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             
             decoder_outputs.append(decoder_output)
             loss += criterion(decoder_output, target_tensor[di])
@@ -54,10 +54,10 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     else:
         # Without teacher forcing: use its own predictions as the next input
         for di in range(target_length):
-            # decoder_output, decoder_hidden, decoder_attention = decoder(
-            #     decoder_input, decoder_hidden, encoder_outputs) # for attention decoder
-            decoder_output, decoder_hidden = decoder(
-                decoder_input, decoder_hidden)  # this if or simply decoder
+            if with_attention == True:
+                decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
+            else:
+                decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             decoder_outputs.append(decoder_output)
 
             topv, topi = decoder_output.topk(1)
