@@ -11,9 +11,9 @@ class Population:
         self.param: Dict = param
         self.population_size: int = population_size
         
-        if len(init_population) > 0:
+        if init_population != None:
             self.m_pop: List[Individual] = [Individual(param, init_genotype)
-                                            for init_genotype in range(len(init_population))]
+                                            for init_genotype in init_population]
             self.population_size: int = len(self.m_pop)
         else: self.m_pop: List[Individual] = [Individual(param)
                                         for _ in range(population_size)]

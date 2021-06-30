@@ -15,6 +15,8 @@ class GA_Plain(LearningAlgorithm):
         self.mutation_rate = mutation_rate
         self.num_epochs = num_epochs
         self.population_size = population_size
+
+        # print("init_population " , init_population)
         self.init_population = init_population
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
