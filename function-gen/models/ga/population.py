@@ -6,11 +6,16 @@ from typing import List, Dict
 
 class Population:
 
-    def __init__(self, param, population_size: int = 100 ):
+    def __init__(self, param, population_size: int = 100, init_population: List[List[int]] = None ):
 
-        self.param = param
-        self.population_size = population_size
-        self.m_pop: List[Individual] = [Individual(param)
+        self.param: Dict = param
+        self.population_size: int = population_size
+        
+        if len(init_population) > 0:
+            self.m_pop: List[Individual] = [Individual(param, init_genotype)
+                                            for init_genotype in range(len(init_population))]
+            self.population_size: int = len(self.m_pop)
+        else: self.m_pop: List[Individual] = [Individual(param)
                                         for _ in range(population_size)]
 
         self.m_pop.sort(key=lambda x: x.fitness)

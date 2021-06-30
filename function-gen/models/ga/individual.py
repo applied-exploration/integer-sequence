@@ -4,12 +4,12 @@ from typing import List, Dict
 
 class Individual:
 
-    def __init__(self, param):
+    def __init__(self, param, init_genotype = None):
         
         self.param = param
 
         self.fitness : float = 0.0
-        self.genotype: Genotype = Genotype(param)
+        self.genotype: Genotype = Genotype(param, init_genotype)
         self.phenotype: Phenotype = Phenotype(param, self.genotype)
 
         self.evaluate()
