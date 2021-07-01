@@ -56,7 +56,7 @@ def eq_to_seq(eq: str, length: int) -> List[int]:
     if len(int_seq) != length: return [0] * length
     return int_seq
 
-syms = list('+*-0123456789txy')
+syms = list('+*-0123456789t')
 # char to index and index to char maps
 char_to_ix = { ch:i for i,ch in enumerate(syms) }
 ix_to_char = { i:ch for i,ch in enumerate(syms) }
