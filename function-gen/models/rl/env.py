@@ -1,7 +1,7 @@
 
-import gym
+# import gym
 from random import randrange
-from gym import error, spaces, utils
+# from gym import error, spaces, utils
 from typing import List, Tuple
 import sys
 import os
@@ -43,55 +43,57 @@ def generate_possibilities(char: str):
     rhs = list_possibilities(char)
     return lhs, rhs
 
+def encodeWithLanguage(lang: Lang, input):
+    return [lang.word2index[word] for word in list(input)]
 
+def decodeWithLanguage(lang: Lang, input):
+    return [lang.index2word[word] for word in list(input)]
 
+def createInitialState(input_lang: Lang, int_seq: List[int], output_length: int) -> Tuple[List[int], List[int]]:
+    seq = encodeWithLanguage(input_lang, [str(i) for i in int_seq])
+    return ([-1] * output_length, seq)
 
-class IntegerSequenceEnv(gym.Env):  
-    metadata = {'render.modes': ['human']}
-
+# class IntegerSequenceEnv(gym.Env):  
+class IntegerSequenceEnv():  
     int_sequence: List[int]
+    eq_state: List[int] = []
     output_length: int
     target_function: str
 
     input_lang: Lang
     output_lang: Lang
 
-    syms = list('+*-0123456789t')
-    # char to index and index to char maps
-    char_to_ix = { ch:i for i,ch in enumerate(syms) }
-    ix_to_char = { i:ch for i,ch in enumerate(syms) }
-
-    eq_state: List[int] = []
+    state: Tuple[List[int], List[int]]
 
     def __init__(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
-        self.action_space = spaces.Discrete(len(self.syms))
+        # self.action_space = spaces.Discrete(len(self.syms))
         # if this doesn't work, hard-code it
-        self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
+        # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
         self.int_sequence = int_sequence
         self.output_length = len(target_function)
         self.target_function = target_function
         self.input_lang = input_lang
         self.output_lang = output_lang
-        self.state = [int_sequence, []]
+        self.state = createInitialState(self.input_lang, int_sequence, self.output_length)
 
 
     def step(self, action):
         self.state = self.state + self.ix_to_char[action]
         if len(self.state) == self.output_length:
-            if 
+            # if 
             
             return (self.__get_state(), reward, done)
 
         else:
             reward = 0
-            done = False3453
+            done = False
             return (self.__get_state(), reward, done)
  
     def __get_state(self):
         return [self.int_sequence, self.eq_state]
 
     def reset(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
-        self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
+        # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
         self.int_sequence = int_sequence
         self.output_length = len(target_function)
         self.target_function = target_function
