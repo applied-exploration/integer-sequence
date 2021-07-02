@@ -7,12 +7,14 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, embedding_size):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
 
-        self.embedding = nn.Embedding(input_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size)
+        # self.embedding = nn.Embedding(input_size, hidden_size)
+        # self.gru = nn.GRU(hidden_size, hidden_size)
+        self.embedding = nn.Embedding(input_size, embedding_size)
+        self.gru = nn.GRU(embedding_size, hidden_size)
 
     def forward(self, input, hidden):
         embedded = self.embedding(input).view(1, 1, -1)
@@ -25,12 +27,15 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size):
+    def __init__(self, hidden_size, output_size, embedding_size):
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
 
-        self.embedding = nn.Embedding(output_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size)
+        # self.embedding = nn.Embedding(output_size, hidden_size)
+        # self.gru = nn.GRU(hidden_size, hidden_size)
+        self.embedding = nn.Embedding(output_size, embedding_size)
+        self.gru = nn.GRU(embedding_size, hidden_size)
+        
         self.out = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
