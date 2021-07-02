@@ -44,8 +44,8 @@ class RNN_Plain(LearningAlgorithm):
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.output_size = output_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size).to(device)
+        self.encoder = EncoderRNN(self.input_size, 64, self.hidden_size).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, 64, self.output_size).to(device)
 
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
