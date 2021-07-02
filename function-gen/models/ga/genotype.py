@@ -5,15 +5,17 @@ from utils import generate_random_eq, is_eq_valid, eq_encoder, eq_decoder, gener
 
 
 class Genotype:
-    def __init__(self, param):
+    def __init__(self, param, init_genotype = None):
         self.param = param
         # self.m_genes: List[int] = [math.floor(random.random() * param['symbol_set_size']) for _ in range(param['encoded_seq_length'])]
 
-        random_function = generate_random_eq_valid(param['encoded_seq_length'])
+        if len(init_genotype) > 0: 
+            self.m_genes: List[int] = init_genotype
+        else: 
+            random_function = generate_random_eq_valid(param['encoded_seq_length'])
+            encoded_function_to_genes = eq_encoder(random_function)
+            self.m_genes: List[int] = encoded_function_to_genes
 
-        encoded_function_to_genes = eq_encoder(random_function)
-
-        self.m_genes: List[int] = encoded_function_to_genes
 
     def mutate_(self):
         # 5% mutation rate

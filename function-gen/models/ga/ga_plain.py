@@ -8,13 +8,14 @@ from lang import Lang
 
 class GA_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs: int, population_size: int):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs: int, population_size: int, init_population:List[List[List[int]]] = []):
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
         self.mutation_rate = mutation_rate
         self.num_epochs = num_epochs
         self.population_size = population_size
+        self.init_population = init_population
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         pass
@@ -28,15 +29,17 @@ class GA_Plain(LearningAlgorithm):
                 "encoded_seq_length" : self.encoded_seq_length,
                 "mutation_rate": self.mutation_rate,
                 "output_sequence_length": self.output_sequence_length,
-                "target_sequence": seq,
+                "target_sequence": seq
             }
-            new_pop = Population(param, self.population_size)
+            
+            if self.init_population != None:
+                new_pop = Population(param, self.population_size, self.init_population[i])
+            else: new_pop = Population(param, self.population_size)
+
             for _ in range(self.num_epochs):
                 new_pop.evolve_()
-                # print(new_pop.m_pop[-1].fitness)
-                # print(new_pop.m_pop[0].fitness)
                 if new_pop.m_pop[-1].fitness == 0.0: break
-            # print('output_equation ', new_pop.m_pop[-1].phenotype.decoded_representation)
+
             output.append(new_pop.m_pop[-1].phenotype.decoded_representation)
         return output
 

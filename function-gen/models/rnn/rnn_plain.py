@@ -62,7 +62,7 @@ class RNN_Plain(LearningAlgorithm):
 
         return converted_data
 
-    def train(self, data: List[Tuple[List[int], str]], input_lang: Lang, output_lang: Lang) -> None:
+    def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         print_every = math.floor(self.num_epochs/10)
         # plot_every=100
 
@@ -101,7 +101,7 @@ class RNN_Plain(LearningAlgorithm):
                 #     plot_loss_total = 0
 
 
-    def infer(self, data: List[List[int]], input_lang: Lang, output_lang: Lang) -> List[str]:
+    def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
         max_length=  10
         output_list = []
 
