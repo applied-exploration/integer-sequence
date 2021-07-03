@@ -152,3 +152,8 @@ class RNN_Plain(LearningAlgorithm):
 
         return output_list #decoded_words, output_sequence, decoder_attentions[:di + 1]
         
+    def save(self, name: str):
+        folder = ""
+        torch.save(self.encoder.state_dict(), name + "-encoder.pt")
+        torch.save(self.decoder.state_dict(), name + "-decoder.pt")
+
