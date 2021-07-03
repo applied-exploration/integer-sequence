@@ -19,6 +19,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_optimizer.zero_grad()
 
     input_length = input_tensor.size(0)
+    print(input_tensor.shape)
+    print(input_length)
     target_length = target_tensor.size(0)
 
     encoder_outputs = torch.zeros(

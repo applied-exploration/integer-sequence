@@ -84,7 +84,7 @@ class RNN_Plain(LearningAlgorithm):
         ''' Create a dataset that has num_epochs of minibatches which include randomly selected pairs'''
         n_dataset = batch_size * num_epochs
         
-        truncated_dataset = [tensorFromSentence(lang, data[i]).view(1, -1)
+        truncated_dataset = [tensorFromSentence(lang, data[i])##.view(1, -1)
                         for i in range(n_dataset)]
 
         minibatch_dataset = []
@@ -93,7 +93,7 @@ class RNN_Plain(LearningAlgorithm):
             minibatch_dataset.append(truncated_dataset[i*batch_size:(i+1)*batch_size])
 
         for i, minibatch in enumerate(minibatch_dataset):
-            minibatch_dataset[i] = torch.cat(minibatch)
+            minibatch_dataset[i] = torch.cat(minibatch, dim=1)
   
         return minibatch_dataset
 
@@ -109,27 +109,29 @@ class RNN_Plain(LearningAlgorithm):
 
         ''' Prepare data'''
         ## OLD ##
-        pairs = self.convert_data(data)
-        training_pairs = [tensorsFromPair(random.choice(pairs), input_lang, output_lang)
-                        for i in range(self.num_epochs)]
+        # pairs = self.convert_data(data)
+        # training_pairs = [tensorsFromPair(random.choice(pairs), input_lang, output_lang)
+        #                 for i in range(self.num_epochs)]
+        # print(training_pairs[0][0])
+        # print(training_pairs[0][1])
 
         ## NEW ##
         data = data[:10]
         input_data, target_data = self.randomize_seperate_data(data)
-        print("original pairs")
-        print(pairs[:3])
-        print("input data")
-        print(input_data[:3])
-        print("target data")
-        print(target_data[:3])
-        minibatch_dataset_input = self.create_minibatch(input_data, 3, self.num_epochs, input_lang)
-        minibatch_dataset_target = self.create_minibatch(target_data, 3, self.num_epochs, output_lang)
+        # print("original pairs")
+        # print(pairs[:3])
+        # print("input data")
+        # print(input_data[:3])
+        # print("target data")
+        # print(target_data[:3])
+        minibatch_dataset_input = self.create_minibatch(input_data, 2, self.num_epochs, input_lang)
+        minibatch_dataset_target = self.create_minibatch(target_data, 2, self.num_epochs, output_lang)
 
-        print("=====> minibatches:")
-        print(minibatch_dataset_input[:3])
-        print("------")
-        print(minibatch_dataset_target[:3])
-        print("<===== minibatches:")
+        # print("=====> minibatches:")
+        # print(minibatch_dataset_input[:2])
+        # print("------")
+        # print(minibatch_dataset_target[:2])
+        # print("<===== minibatches:")
 
 
         ''' Defining Optimization parameters'''
@@ -143,9 +145,13 @@ class RNN_Plain(LearningAlgorithm):
 
         ''' Feed forward of network & calculating loss'''
         for iter in range(1,  self.num_epochs + 1):
-            training_pair = training_pairs[iter - 1]
-            input_tensor = training_pair[0]
-            target_tensor = training_pair[1]
+            # training_pair = training_pairs[iter - 1]
+            # input_tensor = training_pair[0]
+            # target_tensor = training_pair[1]
+
+            input_tensor = minibatch_dataset_input[iter- 1]    
+            target_tensor = minibatch_dataset_target[iter- 1]    
+
             loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
             print_loss_total += loss
             plot_loss_total += loss

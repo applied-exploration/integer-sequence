@@ -13,11 +13,24 @@ class EncoderRNN(nn.Module):
 
         # self.embedding = nn.Embedding(input_size, hidden_size)
         # self.gru = nn.GRU(hidden_size, hidden_size)
+        print("input_size")
+        print(input_size)
+        
+        ''' !!!THE PROBLEM IS HERE with GRU receiving the wrong input size!!! '''
         self.embedding = nn.Embedding(input_size, embedding_size)
         self.gru = nn.GRU(embedding_size, hidden_size)
 
     def forward(self, input, hidden):
+        print("===> Encoder Input")
+        print("input")
+        print(input)
+        # print("---")
+        # print("hidden")
+        # print(hidden)
+        print("<=== Encoder Input")
+
         embedded = self.embedding(input).view(1, 1, -1)
+        print(embedded)
         output = embedded
         output, hidden = self.gru(output, hidden)
         return output, hidden
