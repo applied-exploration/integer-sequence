@@ -55,8 +55,18 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             decoder_outputs.append(decoder_output)
 
             print("decoder output ", decoder_output.shape)
-            print("target_tensor ", target_tensor.shape)
-            loss += criterion(decoder_output, target_tensor[di])
+            print("decoder output ", decoder_output)
+            target_tensor_unsqueezed = target_tensor[di].unsqueeze(0)
+            print("target_tensor ", target_tensor_unsqueezed)
+            print("target_tensor ", target_tensor_unsqueezed.shape)
+            # print("target_tensor_unsqueezed.shape ", target_tensor_unsqueezed.shape)
+
+            ''' [info] The decoder outputs now [1, 3, 16]. 3 is the batch size, 
+            16 is the number of symbols we have. Each value in the matrix is a probability of that being true. 
+            We either need to convert the probabilities into indexes or change the target matrix to be one-hot encoded.
+            For some reason values are negative probabilities.
+            '''
+            loss += criterion(decoder_output, target_tensor_unsqueezed)
             decoder_input = target_tensor[di]  # Teacher forcing
 
     else:
@@ -71,7 +81,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             topv, topi = decoder_output.topk(1)
             decoder_input = topi.squeeze().detach()  # detach from history as input
 
-            loss += criterion(decoder_output, target_tensor[di])
+            target_tensor_unsqueezed = target_tensor[di].unsqueeze(0)
+            print("target_tensor_unsqueezed.shape ", target_tensor_unsqueezed.shape)
+            loss += criterion(decoder_output, target_tensor_unsqueezed)
             if decoder_input.item() == EOS_token:
                 break
 

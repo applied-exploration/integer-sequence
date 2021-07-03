@@ -153,7 +153,9 @@ class RNN_Plain(LearningAlgorithm):
             input_tensor = minibatch_dataset_input[iter- 1]    
             target_tensor = minibatch_dataset_target[iter- 1] 
             print("input_tensor ", input_tensor.shape)   
+            print("input_tensor ", input_tensor)   
             print("target_tensor ", target_tensor.shape)   
+            print("target_tensor ", target_tensor)   
 
             loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
             print_loss_total += loss
