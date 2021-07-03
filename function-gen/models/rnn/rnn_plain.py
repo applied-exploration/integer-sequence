@@ -63,23 +63,88 @@ class RNN_Plain(LearningAlgorithm):
 
         return converted_data
 
+    def randomize_seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
+        input_data = []
+        target_data = []
+
+        shuffled_data = random.sample(data, len(data))
+
+
+        for pair in shuffled_data:
+            stringified_sequence = ''.join(str(x)+',' for x in pair[0])
+            # new_tuple = (stringified_sequence[:-1], pair[1])
+            # converted_data.append(new_tuple)
+
+            input_data.append(stringified_sequence[:-1])
+            target_data.append(pair[1])
+
+        return input_data, target_data
+
+    def create_minibatch(self, data, batch_size, num_epochs, lang):
+        ''' Create a dataset that has num_epochs of minibatches which include randomly selected pairs'''
+        n_dataset = batch_size * num_epochs
+        
+        # truncated_dataset = data[:n_dataset]
+        truncated_dataset = [tensorFromSentence(lang, data)
+                        for i in range(n_dataset)]
+
+        print("truncated_dataset")
+        print(truncated_dataset)
+
+
+        minibatch_dataset = []
+
+        for i in range(0, num_epochs):
+            minibatch_dataset.append(truncated_dataset[i*batch_size:(i+1)*batch_size])
+
+        for i, minibatch in enumerate(minibatch_dataset):
+            concatenated_pair = torch.cat(*minibatch)
+            print(concatenated_pair)
+        # print(minibatch_dataset)
+        # for i in range(0, n_dataset, batch_size):
+        #     minibatch_dataset
+        #     print(truncated_dataset[i])
+
+        return minibatch_dataset
+
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
-        print_every = math.floor(self.num_epochs/10)
+        print_every = max(1, math.floor(self.num_epochs/10))
         # plot_every=100
 
-        pairs = self.convert_data(data)
-
+        ''' For diagnosis'''
         start = time.time()
         plot_losses = []
         print_loss_total = 0  # Reset every print_every
         plot_loss_total = 0  # Reset every plot_every
 
-        encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
-        decoder_optimizer = optim.SGD(self.decoder.parameters(), lr=self.learning_rate)
+        ''' Prepare data'''
+        ## OLD ##
+        pairs = self.convert_data(data)
         training_pairs = [tensorsFromPair(random.choice(pairs), input_lang, output_lang)
                         for i in range(self.num_epochs)]
+
+        ## NEW ##
+        input_data, target_data = self.randomize_seperate_data(data)
+        print("original pairs")
+        print(pairs[:3])
+        print("input data")
+        print(input_data[:3])
+        print("target data")
+        print(target_data[:3])
+        minibatch_dataset_input = self.create_minibatch(input_data, 3, self.num_epochs, input_lang)
+        minibatch_dataset_target = self.create_minibatch(target_data, 3, self.num_epochs, output_lang)
+
+
+        ''' Defining Optimization parameters'''
+        encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
+        decoder_optimizer = optim.SGD(self.decoder.parameters(), lr=self.learning_rate)
+
         criterion = nn.NLLLoss()  # converted_loss
 
+        # print("training pairs[:5]")
+        # print(training_pairs[:5])
+
+        ''' Feed forward of network & calculating loss'''
         for iter in range(1,  self.num_epochs + 1):
             training_pair = training_pairs[iter - 1]
             input_tensor = training_pair[0]
