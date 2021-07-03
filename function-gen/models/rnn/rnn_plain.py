@@ -33,7 +33,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, learning_rate: float = 0.01, calc_magnitude_on = False):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, calc_magnitude_on = False):
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
@@ -45,8 +45,9 @@ class RNN_Plain(LearningAlgorithm):
         self.input_size = input_size
         self.output_size = output_size
         self.embedding_size = embedding_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size).to(device)
+        self.batch_size = batch_size
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size).to(device)
 
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
@@ -124,8 +125,8 @@ class RNN_Plain(LearningAlgorithm):
         # print(input_data[:3])
         # print("target data")
         # print(target_data[:3])
-        minibatch_dataset_input = self.create_minibatch(input_data, 2, self.num_epochs, input_lang)
-        minibatch_dataset_target = self.create_minibatch(target_data, 2, self.num_epochs, output_lang)
+        minibatch_dataset_input = self.create_minibatch(input_data, self.batch_size, self.num_epochs, input_lang)
+        minibatch_dataset_target = self.create_minibatch(target_data, self.batch_size, self.num_epochs, output_lang)
 
         # print("=====> minibatches:")
         # print(minibatch_dataset_input[:2])
@@ -150,7 +151,9 @@ class RNN_Plain(LearningAlgorithm):
             # target_tensor = training_pair[1]
 
             input_tensor = minibatch_dataset_input[iter- 1]    
-            target_tensor = minibatch_dataset_target[iter- 1]    
+            target_tensor = minibatch_dataset_target[iter- 1] 
+            print("input_tensor ", input_tensor.shape)   
+            print("target_tensor ", target_tensor.shape)   
 
             loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
             print_loss_total += loss

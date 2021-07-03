@@ -7,9 +7,10 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, embedding_size):
+    def __init__(self, input_size, hidden_size, embedding_size, batch_size):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
+        self.batch_size = batch_size
 
         # self.embedding = nn.Embedding(input_size, hidden_size)
         # self.gru = nn.GRU(hidden_size, hidden_size)
@@ -21,28 +22,33 @@ class EncoderRNN(nn.Module):
         self.gru = nn.GRU(embedding_size, hidden_size)
 
     def forward(self, input, hidden):
-        print("===> Encoder Input")
-        print("input")
-        print(input)
-        # print("---")
-        # print("hidden")
-        # print(hidden)
-        print("<=== Encoder Input")
+        # print("===> Encoder Input")
+        # print("input ", input.shape)
+        # print("hidden ", hidden.shape)
+        # print("<================= ")
 
-        embedded = self.embedding(input).view(1, 1, -1)
-        print(embedded)
+        embedded = self.embedding(input).unsqueeze(0)
+        # embedded = self.embedding(input).view(1, 1, -1)
+    
+        # print("embedded.shape: ", embedded.shape)
+
         output = embedded
         output, hidden = self.gru(output, hidden)
+        # print("===> Encoder Output")
+        # print("output " , output.shape)
+        # print("hidden ", hidden.shape )
+        # print("<=================")
         return output, hidden
 
     def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size, device=device)
+        return torch.zeros(1, self.batch_size, self.hidden_size, device=device)
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size, embedding_size):
+    def __init__(self, hidden_size, output_size, embedding_size, batch_size):
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
+        self.batch_size = batch_size
 
         # self.embedding = nn.Embedding(output_size, hidden_size)
         # self.gru = nn.GRU(hidden_size, hidden_size)
@@ -53,24 +59,40 @@ class DecoderRNN(nn.Module):
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
-        output = self.embedding(input).view(1, 1, -1)
+        # print("===> Decoder Input")
+        # print("input ", input.shape)
+        # print("hidden ", hidden.shape)
+        # print("<================= ")
+        # output = self.embedding(input).view(1, 1, -1)
+        embedding = self.embedding(input)#.unsqueeze(1)
+        # print("embedding shape ", embedding.shape)
+        output = embedding #.unsqueeze(1)
+        # print("output shape: ", output.shape)
         output = F.relu(output)
         output, hidden = self.gru(output, hidden)
         output = self.softmax(self.out(output[0]))
+
+        output = output.unsqueeze(0)
+        # print("===> Decoder Output")
+        # print("output " , output.shape)
+        # print("hidden ", hidden.shape )
+        # print("<=================")
+
         return output, hidden
 
     def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size, device=device)
+        return torch.zeros(1, self.batch_size, self.hidden_size, device=device)
 
 
 
 MAX_LENGTH = 10
 
 class AttnDecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=MAX_LENGTH):
+    def __init__(self, hidden_size, output_size, batch_size, dropout_p=0.1, max_length=MAX_LENGTH):
         super(AttnDecoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.output_size = output_size
+        self.batch_size = batch_size
         self.dropout_p = dropout_p
         self.max_length = max_length
 
@@ -100,4 +122,4 @@ class AttnDecoderRNN(nn.Module):
         return output, hidden, attn_weights
 
     def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size, device=device)
+        return torch.zeros(1, self.batch_size, self.hidden_size, device=device)

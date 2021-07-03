@@ -19,8 +19,6 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_optimizer.zero_grad()
 
     input_length = input_tensor.size(0)
-    print(input_tensor.shape)
-    print(input_length)
     target_length = target_tensor.size(0)
 
     encoder_outputs = torch.zeros(
@@ -33,11 +31,16 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             input_tensor[ei], encoder_hidden)
         encoder_outputs[ei] = encoder_output[0, 0]
 
-    decoder_input = torch.tensor([[SOS_token]], device=device)
+    batch_size = input_tensor.shape[1]
+
+    decoder_input = torch.tensor([[SOS_token for _ in range(batch_size)]], device=device)
 
     decoder_hidden = encoder_hidden
 
-    use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    print("encoder hidden -> decoder hidden ", decoder_hidden.shape)
+
+    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    use_teacher_forcing = True 
 
     decoder_outputs = []
 
@@ -50,6 +53,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             
             decoder_outputs.append(decoder_output)
+
+            print("decoder output ", decoder_output.shape)
+            print("target_tensor ", target_tensor.shape)
             loss += criterion(decoder_output, target_tensor[di])
             decoder_input = target_tensor[di]  # Teacher forcing
 
