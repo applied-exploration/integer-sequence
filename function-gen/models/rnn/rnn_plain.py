@@ -84,13 +84,8 @@ class RNN_Plain(LearningAlgorithm):
         ''' Create a dataset that has num_epochs of minibatches which include randomly selected pairs'''
         n_dataset = batch_size * num_epochs
         
-        # truncated_dataset = data[:n_dataset]
-        truncated_dataset = [tensorFromSentence(lang, data)
+        truncated_dataset = [tensorFromSentence(lang, data[i]).view(1, -1)
                         for i in range(n_dataset)]
-
-        print("truncated_dataset")
-        print(truncated_dataset)
-
 
         minibatch_dataset = []
 
@@ -98,13 +93,8 @@ class RNN_Plain(LearningAlgorithm):
             minibatch_dataset.append(truncated_dataset[i*batch_size:(i+1)*batch_size])
 
         for i, minibatch in enumerate(minibatch_dataset):
-            concatenated_pair = torch.cat(*minibatch)
-            print(concatenated_pair)
-        # print(minibatch_dataset)
-        # for i in range(0, n_dataset, batch_size):
-        #     minibatch_dataset
-        #     print(truncated_dataset[i])
-
+            minibatch_dataset[i] = torch.cat(minibatch)
+  
         return minibatch_dataset
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
@@ -124,6 +114,7 @@ class RNN_Plain(LearningAlgorithm):
                         for i in range(self.num_epochs)]
 
         ## NEW ##
+        data = data[:10]
         input_data, target_data = self.randomize_seperate_data(data)
         print("original pairs")
         print(pairs[:3])
@@ -133,6 +124,12 @@ class RNN_Plain(LearningAlgorithm):
         print(target_data[:3])
         minibatch_dataset_input = self.create_minibatch(input_data, 3, self.num_epochs, input_lang)
         minibatch_dataset_target = self.create_minibatch(target_data, 3, self.num_epochs, output_lang)
+
+        print("=====> minibatches:")
+        print(minibatch_dataset_input[:3])
+        print("------")
+        print(minibatch_dataset_target[:3])
+        print("<===== minibatches:")
 
 
         ''' Defining Optimization parameters'''
