@@ -11,13 +11,7 @@ class EncoderRNN(nn.Module):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.batch_size = batch_size
-
-        # self.embedding = nn.Embedding(input_size, hidden_size)
-        # self.gru = nn.GRU(hidden_size, hidden_size)
-        print("input_size")
-        print(input_size)
-        
-        ''' !!!THE PROBLEM IS HERE with GRU receiving the wrong input size!!! '''
+     
         self.embedding = nn.Embedding(input_size, embedding_size)
         self.gru = nn.GRU(embedding_size, hidden_size)
 
@@ -70,7 +64,11 @@ class DecoderRNN(nn.Module):
         # print("output shape: ", output.shape)
         output = F.relu(output)
         output, hidden = self.gru(output, hidden)
+
+        # print(output.shape)
+        # print(output[0])
         output = self.softmax(self.out(output[0]))
+     
 
         output = output.unsqueeze(0)
         # print("===> Decoder Output")

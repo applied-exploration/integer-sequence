@@ -37,7 +37,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     decoder_hidden = encoder_hidden
 
-    print("encoder hidden -> decoder hidden ", decoder_hidden.shape)
+    # print("encoder hidden -> decoder hidden ", decoder_hidden.shape)
 
     # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
     use_teacher_forcing = True 
@@ -47,6 +47,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
+            print("------DECODER PASS------")
+            print("decoder input ", decoder_input.shape)
+            print("decoder hidden ", decoder_hidden.shape)
             if with_attention == True:
                 decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
             else:
@@ -55,19 +58,18 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             decoder_outputs.append(decoder_output)
 
             print("decoder output ", decoder_output.shape)
-            print("decoder output ", decoder_output)
-            target_tensor_unsqueezed = target_tensor[di].unsqueeze(0)
-            print("target_tensor ", target_tensor_unsqueezed)
-            print("target_tensor ", target_tensor_unsqueezed.shape)
+            decoder_squeezed = decoder_output.squeeze(0)
+            print("decoder output squeezed", decoder_squeezed.shape)
+            # print("decoder output ", decoder_output)
+            print("BLABLA")
+            print("target_tensor ", target_tensor[di].shape) 
+            # target_tensor_unsqueezed = target_tensor[di].unsqueeze(0)
+            # print("target_tensor ", target_tensor_unsqueezed)
+            # print("target_tensor ", target_tensor_unsqueezed.shape)
             # print("target_tensor_unsqueezed.shape ", target_tensor_unsqueezed.shape)
 
-            ''' [info] The decoder outputs now [1, 3, 16]. 3 is the batch size, 
-            16 is the number of symbols we have. Each value in the matrix is a probability of that being true. 
-            We either need to convert the probabilities into indexes or change the target matrix to be one-hot encoded.
-            For some reason values are negative probabilities.
-            '''
-            loss += criterion(decoder_output, target_tensor_unsqueezed)
-            decoder_input = target_tensor[di]  # Teacher forcing
+            loss += criterion(decoder_squeezed, target_tensor[di])
+            decoder_input = target_tensor[di].unsqueeze(0)  # Teacher forcing
 
     else:
         # Without teacher forcing: use its own predictions as the next input
@@ -97,3 +99,4 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_optimizer.step()
 
     return loss.item() / target_length
+

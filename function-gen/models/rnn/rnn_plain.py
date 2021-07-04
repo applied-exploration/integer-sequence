@@ -49,6 +49,9 @@ class RNN_Plain(LearningAlgorithm):
         self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size).to(device)
         self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size).to(device)
 
+        print(self.encoder)
+        print(self.decoder)
+
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
         else:
@@ -153,9 +156,9 @@ class RNN_Plain(LearningAlgorithm):
             input_tensor = minibatch_dataset_input[iter- 1]    
             target_tensor = minibatch_dataset_target[iter- 1] 
             print("input_tensor ", input_tensor.shape)   
-            print("input_tensor ", input_tensor)   
+            # print("input_tensor ", input_tensor)   
             print("target_tensor ", target_tensor.shape)   
-            print("target_tensor ", target_tensor)   
+            # print("target_tensor ", target_tensor)   
 
             loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
             print_loss_total += loss
