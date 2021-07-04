@@ -16,18 +16,33 @@ class EncoderRNN(nn.Module):
         self.gru = nn.GRU(embedding_size, hidden_size)
 
     def forward(self, input, hidden):
+        ''' 
+            Embedding layer: 
+                Size:  [ dictionary size, length of embedded vector ]
+                Input: Receives just encoded categories, eg.: [2, 3, 5]
+            GRU layer:
+                Size: [ length of embedded vector, hidden_size ]
+                Input: [ sequence length, batch_size, embedding size ]​	
+                    eg.: seq_len: 1, batch_size: 2, embedding size: 3
+                          [ [ [ 0.5, 0.2, 0.3 ],
+                              [ 0.2, 0.6, 0.7 ] ] ]  
+        '''
         # print("===> Encoder Input")
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
-        embedded = self.embedding(input).unsqueeze(0)
-        # embedded = self.embedding(input).view(1, 1, -1)
-    
-        # print("embedded.shape: ", embedded.shape)
-
+        '''
+            We need to unsqueeze the embedding output, 
+            because it gives out [num_batch, symbol_encoded_to_vector]
+            and GRU needs [sequence_len, num_batch, symbol_encoded_to_vector]
+            unsqueeze effectively adds a single dimensional array at the location specified, squeeze takes away 1-s
+        '''
+        
+        embedded = self.embedding(input).unsqueeze(0) 
         output = embedded
         output, hidden = self.gru(output, hidden)
+        
         # print("===> Encoder Output")
         # print("output " , output.shape)
         # print("hidden ", hidden.shape )
@@ -53,23 +68,30 @@ class DecoderRNN(nn.Module):
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
+        ''' 
+            Embedding layer: 
+                Size:  [ dictionary size, length of embedded vector ]
+                Input: Receives just encoded categories, eg.: [2, 3, 5]
+            GRU layer:
+                Size: [ length of embedded vector, hidden_size ]
+                Input: [ sequence length, batch_size, embedding size ]​	
+                    eg.: seq_len: 1, batch_size: 2, embedding size: 3
+                          [ [ [ 0.5, 0.2, 0.3 ],
+                              [ 0.2, 0.6, 0.7 ] ] ]  
+        '''
         # print("===> Decoder Input")
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
-        # output = self.embedding(input).view(1, 1, -1)
-        embedding = self.embedding(input)#.unsqueeze(1)
-        # print("embedding shape ", embedding.shape)
-        output = embedding #.unsqueeze(1)
-        # print("output shape: ", output.shape)
+
+        embedding = self.embedding(input)
+        
+        output = embedding 
         output = F.relu(output)
         output, hidden = self.gru(output, hidden)
 
-        # print(output.shape)
-        # print(output[0])
         output = self.softmax(self.out(output[0]))
      
-
         output = output.unsqueeze(0)
         # print("===> Decoder Output")
         # print("output " , output.shape)
