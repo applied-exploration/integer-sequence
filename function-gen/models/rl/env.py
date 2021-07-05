@@ -1,5 +1,5 @@
 
-# import gym
+import gym
 from random import randrange
 # from gym import error, spaces, utils
 from typing import List, Tuple
@@ -7,7 +7,9 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
+from more_itertools import first_true
 
+TreeState = Tuple[List[int], List[int]]
 
 class Node:
     def __init__(self, key):
@@ -30,7 +32,7 @@ def insert(root, key):
 
 
 def generate_possibilities(char: str):
-    def list_possibilities(prev: str) -> str:
+    def list_possibilities(prev: str) -> List[str]:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
             return ['+', '-', '*']
         elif prev in ['s', '+', '-', '*']:
@@ -49,12 +51,26 @@ def encodeWithLanguage(lang: Lang, input):
 def decodeWithLanguage(lang: Lang, input):
     return [lang.index2word[word] for word in list(input)]
 
-def createInitialState(input_lang: Lang, int_seq: List[int], output_length: int) -> Tuple[List[int], List[int]]:
+def createInitialState(input_lang: Lang, int_seq: List[int], output_length: int) -> TreeState:
     seq = encodeWithLanguage(input_lang, [str(i) for i in int_seq])
     return ([-1] * output_length, seq)
 
-# class IntegerSequenceEnv(gym.Env):  
-class IntegerSequenceEnv():  
+
+def getCurrentPosition(state: TreeState) -> int:
+    return first_true(state[0], default=0, pred= lambda x: x != -1)
+
+def replaceNext(state: TreeState, action: int) -> TreeState:
+    pos = getCurrentPosition(state)
+    eq_state = state[0].copy()
+    eq_state[pos] = action
+    return (eq_state, state[1])
+
+def isStateComplete(state: TreeState) -> bool:
+    return 
+
+
+
+class IntegerSequenceEnv(gym.Env):  
     int_sequence: List[int]
     eq_state: List[int] = []
     output_length: int
@@ -63,7 +79,7 @@ class IntegerSequenceEnv():
     input_lang: Lang
     output_lang: Lang
 
-    state: Tuple[List[int], List[int]]
+    state: TreeState
 
     def __init__(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
         # self.action_space = spaces.Discrete(len(self.syms))
@@ -78,6 +94,8 @@ class IntegerSequenceEnv():
 
 
     def step(self, action):
+        # positionToInsert = 
+        # ifStateComplete = 
         self.state = self.state + self.ix_to_char[action]
         if len(self.state) == self.output_length:
             # if 
