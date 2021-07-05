@@ -1,13 +1,21 @@
 
 import gym
-from random import randrange
-# from gym import error, spaces, utils
-from typing import List, Tuple
+# from random import randrange
+from gym import error, spaces, utils
+from typing import Callable, List, Tuple
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
-from more_itertools import first_true
+from utils import normalize_0_1, eq_to_seq, is_eq_valid
+
+
+def index_of_first(lst, pred):
+    for i,v in enumerate(lst):
+        if pred(v):
+            return i
+    return None
 
 TreeState = Tuple[List[int], List[int]]
 
@@ -45,70 +53,68 @@ def generate_possibilities(char: str):
     rhs = list_possibilities(char)
     return lhs, rhs
 
-def encodeWithLanguage(lang: Lang, input):
+def encode_with_lang(lang: Lang, input):
     return [lang.word2index[word] for word in list(input)]
 
-def decodeWithLanguage(lang: Lang, input):
+def decode_with_lang(lang: Lang, input):
     return [lang.index2word[word] for word in list(input)]
 
-def createInitialState(input_lang: Lang, int_seq: List[int], output_length: int) -> TreeState:
-    seq = encodeWithLanguage(input_lang, [str(i) for i in int_seq])
+def create_initial_state(input_lang: Lang, int_seq: List[int], output_length: int) -> TreeState:
+    seq = encode_with_lang(input_lang, [str(i) for i in int_seq])
     return ([-1] * output_length, seq)
 
 
-def getCurrentPosition(state: TreeState) -> int:
-    return first_true(state[0], default=0, pred= lambda x: x != -1)
+def get_current_position(state: TreeState) -> int:
+    index = index_of_first(state[0], lambda x: x == -1)
+    if index is None: return 0
+    return index
 
-def replaceNext(state: TreeState, action: int) -> TreeState:
-    pos = getCurrentPosition(state)
+def insert_action_in_state(state: TreeState, action: int) -> TreeState:
+    pos = get_current_position(state)
     eq_state = state[0].copy()
     eq_state[pos] = action
     return (eq_state, state[1])
 
-def isStateComplete(state: TreeState) -> bool:
-    return 
+def is_state_complete(state: TreeState) -> bool:
+    if -1 in set(state[0]):
+        return False
+    else:
+        return True
 
 
 
 class IntegerSequenceEnv(gym.Env):  
-    int_sequence: List[int]
-    eq_state: List[int] = []
     output_length: int
     target_function: str
+    evaluate_tree: Callable[[str, str], float]
 
     input_lang: Lang
     output_lang: Lang
 
     state: TreeState
+    syms = list('+*-0123456789t')
 
-    def __init__(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
-        # self.action_space = spaces.Discrete(len(self.syms))
-        # if this doesn't work, hard-code it
+    def __init__(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang, evaluate_tree: Callable[[str, str], float]):
+        self.action_space = spaces.Discrete(len(self.syms))
         # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
-        self.int_sequence = int_sequence
         self.output_length = len(target_function)
         self.target_function = target_function
         self.input_lang = input_lang
         self.output_lang = output_lang
-        self.state = createInitialState(self.input_lang, int_sequence, self.output_length)
+        self.evaluate_tree = evaluate_tree
+        self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
 
 
     def step(self, action):
-        # positionToInsert = 
-        # ifStateComplete = 
-        self.state = self.state + self.ix_to_char[action]
-        if len(self.state) == self.output_length:
-            # if 
-            
-            return (self.__get_state(), reward, done)
-
-        else:
-            reward = 0
-            done = False
-            return (self.__get_state(), reward, done)
+        # offset action by 2, because we don't need SOS and EOS tokens here
+        self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action + 2)
+        if is_state_complete(self.state):
+            candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
+            score = self.evaluate_tree(candidate_eq, self.target_function)
+            return (self.state, score, True)
+        
+        return (self.state, 0, False)
  
-    def __get_state(self):
-        return [self.int_sequence, self.eq_state]
 
     def reset(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
         # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
@@ -117,7 +123,7 @@ class IntegerSequenceEnv(gym.Env):
         self.target_function = target_function
         self.input_lang = input_lang
         self.output_lang = output_lang
-        self.state = [int_sequence, []]
+        self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
 
     def render(self, mode='human', close=False):
-        return self.__get_grid()
+        return self.state
