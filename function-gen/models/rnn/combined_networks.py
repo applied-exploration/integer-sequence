@@ -37,10 +37,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     decoder_hidden = encoder_hidden
 
-    # print("encoder hidden -> decoder hidden ", decoder_hidden.shape)
 
-    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-    use_teacher_forcing = False 
+    use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
 
     decoder_outputs = []
@@ -54,12 +52,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             
             decoder_outputs.append(decoder_output)
-
-            # print("-----")
-            # print("decoder output ", decoder_output.shape )
-
             decoder_squeezed = decoder_output.squeeze(0)
-            # print("decoder_squeezed ", decoder_squeezed.shape)
+
     
             loss += criterion(decoder_squeezed, target_tensor[di])
             decoder_input = target_tensor[di].unsqueeze(0)  # Teacher forcing
