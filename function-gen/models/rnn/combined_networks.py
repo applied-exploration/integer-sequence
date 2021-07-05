@@ -39,7 +39,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     # print("encoder hidden -> decoder hidden ", decoder_hidden.shape)
 
-    use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+    use_teacher_forcing = False 
 
 
     decoder_outputs = []
@@ -54,7 +55,11 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             
             decoder_outputs.append(decoder_output)
 
+            # print("-----")
+            # print("decoder output ", decoder_output.shape )
+
             decoder_squeezed = decoder_output.squeeze(0)
+            # print("decoder_squeezed ", decoder_squeezed.shape)
     
             loss += criterion(decoder_squeezed, target_tensor[di])
             decoder_input = target_tensor[di].unsqueeze(0)  # Teacher forcing
@@ -68,13 +73,16 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             decoder_outputs.append(decoder_output)
 
+            ''' Here we are selecting the top prediction for each batch '''
             topv, topi = decoder_output.topk(1)
-            decoder_input = topi.squeeze().detach()  # detach from history as input
+            decoder_input = topi.squeeze().detach().view(1, -1)  # detach from history as input  
 
-            decoder_squeezed = decoder_output.squeeze(0)
+            
+            decoder_output_squeezed = decoder_output.squeeze(0)
+            loss += criterion(decoder_output_squeezed, target_tensor[di])
 
-            loss += criterion(decoder_squeezed, target_tensor[di])
-            # if decoder_input.item() == EOS_token:
+            ## The below code only works if there is only one batch size (it stops from running once it encounters an EOS_token)
+            # if decoder_input.item() == EOS_token: 
             #     break
 
     if calc_magnitude is not None:

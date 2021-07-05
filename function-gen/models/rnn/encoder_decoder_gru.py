@@ -38,10 +38,11 @@ class EncoderRNN(nn.Module):
             and GRU needs [sequence_len, num_batch, symbol_encoded_to_vector]
             unsqueeze effectively adds a single dimensional array at the location specified, squeeze takes away 1-s
         '''
-        
+
         embedded = self.embedding(input).unsqueeze(0) 
         output = embedded
         output, hidden = self.gru(output, hidden)
+
         
         # print("===> Encoder Output")
         # print("output " , output.shape)
@@ -59,8 +60,6 @@ class DecoderRNN(nn.Module):
         self.hidden_size = hidden_size
         self.batch_size = batch_size
 
-        # self.embedding = nn.Embedding(output_size, hidden_size)
-        # self.gru = nn.GRU(hidden_size, hidden_size)
         self.embedding = nn.Embedding(output_size, embedding_size)
         self.gru = nn.GRU(embedding_size, hidden_size)
         
@@ -93,6 +92,7 @@ class DecoderRNN(nn.Module):
         output = self.softmax(self.out(output[0]))
      
         output = output.unsqueeze(0)
+       
         # print("===> Decoder Output")
         # print("output " , output.shape)
         # print("hidden ", hidden.shape )
