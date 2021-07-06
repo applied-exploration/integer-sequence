@@ -38,6 +38,8 @@ def tensorsFromPair(pair, input_lang, output_lang):
 
 
 
+
+
 def compare_sequences(output_sequence: np.ndarray, target_sequence: np.ndarray) -> float:
         magnitude: float = 0.0
 

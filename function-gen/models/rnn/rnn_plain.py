@@ -15,17 +15,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import torch.optim as optim
+from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
-from .combined_networks import train
+from .combined_networks import train, infer
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
 from utils import showPlot, timeSince, asMinutes
-# from lang import load_data
 from lang import Lang
 
 
+from line_profiler import LineProfiler
 
-# MAX_LENGTH = 10
+lp = LineProfiler()
+
 EOS_token = 0
 SOS_token = 1
 
@@ -33,7 +35,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, learning_rate: float = 0.01, calc_magnitude_on = False):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, calc_magnitude_on:bool = False):
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
@@ -45,112 +47,146 @@ class RNN_Plain(LearningAlgorithm):
         self.input_size = input_size
         self.output_size = output_size
         self.embedding_size = embedding_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size).to(device)
+        self.batch_size = batch_size
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
+
+        print(self.encoder)
+        print(self.decoder)
 
         if calc_magnitude_on:
             self.calc_magnitude = calc_magnitude
         else:
             self.calc_magnitude = None
 
-    def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
-        converted_data = []
+    # WITH DATALOADER =>   
+    # def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
+    #     converted_data = []
+
+    #     for pair in data:
+    #         stringified_sequence = ''.join(str(x)+',' for x in pair[0])
+    #         new_tuple = (stringified_sequence[:-1], pair[1])
+    #         converted_data.append(new_tuple)
+
+    #     return converted_data
+
+    # def dataset_to_tensor(self, data: List[str], lang: Lang) -> List[torch.tensor]:
+    #     return [tensorFromSentence(lang, data[i])
+    #                     for i in range(len(data))]
+
+    def seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
+        ''' 
+        Description: 
+            Function that seperates input and target into seperate lists
+        ---
+        Input: 
+        List of Tuples, that contain 
+            - a list of integers (sequence we want to predict, eg.: [2, 4, 6, 8, 10, 12, 14, 16] - input) 
+            - and a string (function we want to predict eg.: '5x3+t-2+8 - target)
+        Output: 
+            - list of inputs (string)
+            - list of targets (string)
+        '''
+
+        input_data = []
+        target_data = []
 
         for pair in data:
             stringified_sequence = ''.join(str(x)+',' for x in pair[0])
-            new_tuple = (stringified_sequence[:-1], pair[1])
-            converted_data.append(new_tuple)
+            input_data.append(stringified_sequence[:-1])
+            target_data.append(pair[1])
 
-        return converted_data
+        return input_data, target_data
+
+    def create_minibatch(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
+        encoded_dataset = [tensorFromSentence(lang, data[random.randrange(0, len(data))])
+                        for i in range(batch_size)]
+        
+        ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
+        return torch.cat(encoded_dataset, dim=1) 
+
+
+    
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
-        print_every = math.floor(self.num_epochs/10)
-        # plot_every=100
+        print_every = max(1, math.floor(self.num_epochs/10))
 
-        pairs = self.convert_data(data)
-
+        ''' For diagnosis'''
         start = time.time()
         plot_losses = []
         print_loss_total = 0  # Reset every print_every
         plot_loss_total = 0  # Reset every plot_every
 
+
+        ''' Defining Optimization parameters'''
         encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
         decoder_optimizer = optim.SGD(self.decoder.parameters(), lr=self.learning_rate)
-        training_pairs = [tensorsFromPair(random.choice(pairs), input_lang, output_lang)
-                        for i in range(self.num_epochs)]
-        criterion = nn.NLLLoss()  # converted_loss
 
-        for iter in range(1,  self.num_epochs + 1):
-            training_pair = training_pairs[iter - 1]
-            input_tensor = training_pair[0]
-            target_tensor = training_pair[1]
-            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
+        ''' 
+        NLLLos requires 
+            - an input tensor of negative logprobabilities 
+              shaped [batch_size, category size (how many symbols we have)] 
+              eg.: [[ -2.1, -1.2 ]
+                    [ -1.5, -0.5 ]
+                    [ -0.7. -0.3 ]]  with num_batch 3 and category size 2 (if eg.: we had only symbols '*+')
+            - and a target tensor 
+              shaped [num_batches]. 
+              eg.: [2, 5, 15] with num_batch 3. Each number represents a category
+        '''
+        criterion = nn.NLLLoss()  
+
+        ''' Prepare Data '''
+        input_data, target_data = self.seperate_data(data)
+
+        # --- with DataLoader --- # 
+        # train_dataloader = DataLoader((self.dataset_to_tensor(input_data, input_lang),self.dataset_to_tensor(target_data, output_lang)),
+        #      batch_size=self.batch_size, shuffle=True)
+        # input_tensor, target_tensor = next(iter(train_dataloader))
+
+        
+
+        ''' Feed forward of network & calculating loss'''
+        for i in range(1,  self.num_epochs + 1):
+            
+            ''' Create a minibatch tensor [sequence_len, batch_size]'''
+            
+            # --- with own minibatching --- #
+            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang)
+            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang)
+
+            # --- with DataLoader --- #
+            # input_tensor, target_tensor = next(iter(train_dataloader))
+                  
+
+            loss = train(
+                input_tensor_minibatch, target_tensor_minibatch, 
+                self.encoder, self.decoder, 
+                encoder_optimizer, decoder_optimizer, 
+                criterion, 
+                input_lang, output_lang, 
+                calc_magnitude = self.calc_magnitude )
+
             print_loss_total += loss
-            plot_loss_total += loss
 
-            if iter % print_every == 0:
+            ''' Print diagnostic '''
+            if i % print_every == 0:
                 print_loss_avg = print_loss_total / print_every
                 print_loss_total = 0
 
-                print('%s (%d %d%%) %.4f' % (timeSince(start, iter / self.num_epochs),
-                                            iter, iter / self.num_epochs * 100, print_loss_avg))
+                print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
+                                            i, i / self.num_epochs * 100, print_loss_avg))
 
-
-                # if iter % plot_every == 0:
-                #     plot_loss_avg = plot_loss_total / plot_every
-                #     plot_losses.append(plot_loss_avg)
-                #     plot_loss_total = 0
 
 
     def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
-        max_length=  10
-        output_list = []
+        ''' Prepare data '''
+        stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
+        input_tensor_minibatch = self.create_minibatch(stringified_inputs, self.batch_size, input_lang)
 
-        for input_sequence in data:
-            sentence = ''.join(str(x)+',' for x in input_sequence)
-            sentence = sentence[:-1]
+        ''' Push throught network '''
+        output_list = infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang )
 
-            with torch.no_grad():
-                input_tensor = tensorFromSentence(input_lang, sentence)
-                input_length = input_tensor.size()[0]
-                encoder_hidden = self.encoder.initHidden()
-
-                encoder_outputs = torch.zeros(max_length, self.encoder.hidden_size, device=device)
-
-                for ei in range(input_length):
-                    encoder_output, encoder_hidden = self.encoder(input_tensor[ei],
-                                                            encoder_hidden)
-                    encoder_outputs[ei] += encoder_output[0, 0]
-
-                decoder_input = torch.tensor([[SOS_token]], device=device)  # SOS
-
-                decoder_hidden = encoder_hidden
-
-                decoded_words = []
-                decoder_attentions = torch.zeros(max_length, max_length)
-
-                for di in range(max_length):
-                    # decoder_output, decoder_hidden, decoder_attention = self.decoder(
-                    #     decoder_input, decoder_hidden, encoder_outputs)
-                    # decoder_attentions[di] = decoder_attention.data
-
-                    decoder_output, decoder_hidden = self.decoder(
-                        decoder_input, decoder_hidden)  # this if or simply decoder
-                        
-                    topv, topi = decoder_output.data.topk(1)
-                    if topi.item() == EOS_token:
-                        decoded_words.append('<EOS>')
-                        break
-                    else:
-                        decoded_words.append(output_lang.index2word[topi.item()])
-
-                    decoder_input = topi.squeeze().detach()
-
-                stringified_output = ''.join(decoded_words[:-1])
-                output_list.append(stringified_output)
-                # output_sequence = eq_to_seq(stringified_output, 9)
-
-        return output_list #decoded_words, output_sequence, decoder_attentions[:di + 1]
+        return output_list
         
     def save(self, name: str):
         folder = ""
