@@ -18,7 +18,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
-from .combined_networks import train
+from .combined_networks import train, infer
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
 from utils import showPlot, timeSince, asMinutes
 # from lang import load_data
@@ -72,11 +72,14 @@ class RNN_Plain(LearningAlgorithm):
 
     #     return converted_data
 
+    # def dataset_to_tensor(self, data: List[str], lang: Lang) -> List[torch.tensor]:
+    #     return [tensorFromSentence(lang, data[i])
+    #                     for i in range(len(data))]
+
     def seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
         ''' 
         Description: 
-            Function that creates a randomly shuffled data, 
-            then seperates input and target into seperate lists
+            Function that seperates input and target into seperate lists
         ---
         Input: 
         List of Tuples, that contain 
@@ -104,9 +107,7 @@ class RNN_Plain(LearningAlgorithm):
 
         return torch.cat(encoded_dataset, dim=1) ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
 
-    def dataset_to_tensor(self, data: List[str], lang: Lang) -> List[torch.tensor]:
-        return [tensorFromSentence(lang, data[random.randrange(0, len(data))])
-                        for i in range(len(data))]
+
     
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
@@ -150,19 +151,23 @@ class RNN_Plain(LearningAlgorithm):
         ''' Feed forward of network & calculating loss'''
         for i in range(1,  self.num_epochs + 1):
             
-            ''' Prepare data. Shuffle dataset and create a minibatch tensor [sequence_len, batch_size]'''
+            ''' Create a minibatch tensor [sequence_len, batch_size]'''
             
             # --- with own minibatching --- #
-            minibatch_dataset_input = self.create_minibatch(input_data, self.batch_size, input_lang)
-            minibatch_dataset_target = self.create_minibatch(target_data, self.batch_size, output_lang)
-            input_tensor = minibatch_dataset_input 
-            target_tensor = minibatch_dataset_target
+            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang)
+            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang)
 
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
                   
 
-            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
+            loss = train(
+                input_tensor_minibatch, target_tensor_minibatch, 
+                self.encoder, self.decoder, 
+                encoder_optimizer, decoder_optimizer, 
+                criterion, 
+                input_lang, output_lang, 
+                calc_magnitude = self.calc_magnitude )
 
             print_loss_total += loss
             plot_loss_total += loss
@@ -183,52 +188,13 @@ class RNN_Plain(LearningAlgorithm):
 
 
     def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
-        max_length=  10
-        output_list = []
 
-        for input_sequence in data:
-            sentence = ''.join(str(x)+',' for x in input_sequence)
-            sentence = sentence[:-1]
+        ''' Prepare data '''
+        stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
+        input_tensor_minibatch = self.create_minibatch(stringified_inputs, self.batch_size, input_lang)
 
-            with torch.no_grad():
-                input_tensor = tensorFromSentence(input_lang, sentence)
-                input_length = input_tensor.size()[0]
-                encoder_hidden = self.encoder.initHidden()
+        print("input_tensor_minibatch ", input_tensor_minibatch.shape)
+        output_list = infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang )
 
-                encoder_outputs = torch.zeros(max_length, self.encoder.hidden_size, device=device)
-
-                for ei in range(input_length):
-                    encoder_output, encoder_hidden = self.encoder(input_tensor[ei],
-                                                            encoder_hidden)
-                    encoder_outputs[ei] += encoder_output[0, 0]
-
-                decoder_input = torch.tensor([[SOS_token]], device=device)  # SOS
-
-                decoder_hidden = encoder_hidden
-
-                decoded_words = []
-                decoder_attentions = torch.zeros(max_length, max_length)
-
-                for di in range(max_length):
-                    # decoder_output, decoder_hidden, decoder_attention = self.decoder(
-                    #     decoder_input, decoder_hidden, encoder_outputs)
-                    # decoder_attentions[di] = decoder_attention.data
-
-                    decoder_output, decoder_hidden = self.decoder(
-                        decoder_input, decoder_hidden)  # this if or simply decoder
-                        
-                    topv, topi = decoder_output.data.topk(1)
-                    if topi.item() == EOS_token:
-                        decoded_words.append('<EOS>')
-                        break
-                    else:
-                        decoded_words.append(output_lang.index2word[topi.item()])
-
-                    decoder_input = topi.squeeze().detach()
-
-                stringified_output = ''.join(decoded_words[:-1])
-                output_list.append(stringified_output)
-                # output_sequence = eq_to_seq(stringified_output, 9)
-
-        return output_list #decoded_words, output_sequence, decoder_attentions[:di + 1]
+        return output_list
         

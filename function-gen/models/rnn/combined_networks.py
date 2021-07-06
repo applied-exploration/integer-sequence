@@ -21,6 +21,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     input_length = input_tensor.size(0)
     target_length = target_tensor.size(0)
 
+
     encoder_outputs = torch.zeros(
         max_length, encoder.hidden_size, device=device)
 
@@ -31,9 +32,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             input_tensor[ei], encoder_hidden)
         encoder_outputs[ei] = encoder_output[0, 0]
 
-    batch_size = input_tensor.shape[1]
+    batch_size_inferred = input_tensor.shape[1]
 
-    decoder_input = torch.tensor([[SOS_token for _ in range(batch_size)]], device=device)
+    decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
 
     decoder_hidden = encoder_hidden
 
@@ -90,3 +91,73 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     return loss.item() / target_length
 
+def infer(input_tensor, encoder, decoder, output_lang):
+    max_length=  10
+    output_list = []
+
+    input_length = input_tensor.size(0)
+    batch_size_inferred = input_tensor.shape[1]
+
+    with torch.no_grad():
+
+        print("input_tensor ", input_tensor.shape)
+        encoder_hidden = encoder.initHidden(batch_size = batch_size_inferred)
+        print(encoder_hidden.shape)
+        encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
+
+        # print(input_tensor[0])
+        # print(input_tensor[8])
+        # print(input_tensor[8].shape)
+
+
+        for ei in range(input_length):
+            encoder_output, encoder_hidden = encoder(input_tensor[ei], encoder_hidden)
+            encoder_outputs[ei] += encoder_output[0, 0]
+
+        decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
+        # decoder_input = torch.tensor([[SOS_token]], device=device)
+        # decoder_input = torch.tensor([[SOS_token]], device=device)  # SOS
+
+        decoder_hidden = encoder_hidden
+
+        decoded_words = []
+        decoder_attentions = torch.zeros(max_length, max_length)
+
+        for di in range(max_length):
+            # decoder_output, decoder_hidden, decoder_attention = self.decoder(
+            #     decoder_input, decoder_hidden, encoder_outputs)
+            # decoder_attentions[di] = decoder_attention.data
+
+            decoder_output, decoder_hidden = decoder(
+                decoder_input, decoder_hidden)  # this if or simply decoder
+                
+            topv, topi = decoder_output.data.topk(1)
+            # if topi.item() == EOS_token:
+            #     decoded_words.append('<EOS>')
+            #     break
+            # else:
+            #     decoded_words.append(output_lang.index2word[topi.item()])
+            
+            
+            # decoded_words.append(topi) ##(output_lang.index2word[topi.item()])
+
+            decoder_input = topi.squeeze().detach().view(1,-1)
+            decoded_words.append(decoder_input)
+            
+        
+        # print(decoded_words[:10])
+        concatenated_output_sequences = torch.cat(decoded_words, dim=0).transpose(0,1)
+        # print("concatenated_output_sequences ", concatenated_output_sequences.shape)
+        # print(concatenated_output_sequences[:10])
+
+        for output in concatenated_output_sequences.cpu().numpy():
+            word =[]
+            for character in output:
+                output_decoded = output_lang.index2word[character]
+                word.append(output_decoded)
+            
+            stringified_output = ''.join(word[:-1])
+            output_list.append(stringified_output)
+
+
+    return output_list #decoded_words, output_sequence, decoder_attentions[:di + 1]

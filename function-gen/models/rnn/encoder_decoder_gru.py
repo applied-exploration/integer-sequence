@@ -55,8 +55,9 @@ class EncoderRNN(nn.Module):
         # print("<=================")
         return output, hidden
 
-    def initHidden(self):
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=device)
+    def initHidden(self, batch_size = None):
+        if batch_size == None : batch_size = self.batch_size
+        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
 
 
 class DecoderRNN(nn.Module):
@@ -107,8 +108,9 @@ class DecoderRNN(nn.Module):
 
         return output, hidden
 
-    def initHidden(self):
-        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=device)
+    def initHidden(self, batch_size = None):
+        if batch_size == None: batch_size = self.batch_size
+        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
 
 
 
