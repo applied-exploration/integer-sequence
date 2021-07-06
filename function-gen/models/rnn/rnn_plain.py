@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import torch.optim as optim
+from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
 from .combined_networks import train
@@ -23,6 +24,10 @@ from utils import showPlot, timeSince, asMinutes
 # from lang import load_data
 from lang import Lang
 
+
+from line_profiler import LineProfiler
+
+lp = LineProfiler()
 
 
 # MAX_LENGTH = 10
@@ -33,7 +38,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, calc_magnitude_on = False):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, calc_magnitude_on:bool = False):
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
@@ -46,8 +51,8 @@ class RNN_Plain(LearningAlgorithm):
         self.output_size = output_size
         self.embedding_size = embedding_size
         self.batch_size = batch_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size).to(device)
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
 
         print(self.encoder)
         print(self.decoder)
@@ -57,8 +62,17 @@ class RNN_Plain(LearningAlgorithm):
         else:
             self.calc_magnitude = None
 
+    # def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
+    #     converted_data = []
 
-    def randomize_seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
+    #     for pair in data:
+    #         stringified_sequence = ''.join(str(x)+',' for x in pair[0])
+    #         new_tuple = (stringified_sequence[:-1], pair[1])
+    #         converted_data.append(new_tuple)
+
+    #     return converted_data
+
+    def seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
         ''' 
         Description: 
             Function that creates a randomly shuffled data, 
@@ -76,9 +90,7 @@ class RNN_Plain(LearningAlgorithm):
         input_data = []
         target_data = []
 
-        shuffled_data = random.sample(data, len(data))
-
-        for pair in shuffled_data:
+        for pair in data:
             stringified_sequence = ''.join(str(x)+',' for x in pair[0])
             input_data.append(stringified_sequence[:-1])
             target_data.append(pair[1])
@@ -86,26 +98,16 @@ class RNN_Plain(LearningAlgorithm):
         return input_data, target_data
 
     def create_minibatch(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
-        ''' 
-        Description: 
-            Create a dataset that has num_epochs of minibatches 
-            which include randomly selected pairs
-        ---
-        Input: 
-            - data: List of strings 
-            - batch_size: The size of a minibatch
-        Output: 
-            - Tensor [sequence_len, batch_size]: 
-                n_row: number of timesteps in sequence
-                n_column: batch_size
-        '''
 
-        encoded_dataset = [tensorFromSentence(lang, data[i])
+        encoded_dataset = [tensorFromSentence(lang, data[random.randrange(0, len(data))])
                         for i in range(batch_size)]
 
-        minibatch_dataset = torch.cat(encoded_dataset, dim=1)
+        return torch.cat(encoded_dataset, dim=1) ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
 
-        return minibatch_dataset
+    def dataset_to_tensor(self, data: List[str], lang: Lang) -> List[torch.tensor]:
+        return [tensorFromSentence(lang, data[random.randrange(0, len(data))])
+                        for i in range(len(data))]
+    
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         print_every = max(1, math.floor(self.num_epochs/10))
@@ -135,18 +137,30 @@ class RNN_Plain(LearningAlgorithm):
         '''
         criterion = nn.NLLLoss()  
 
-       
+        ''' Prepare Data '''
+        input_data, target_data = self.seperate_data(data)
+
+        # --- with DataLoader --- # 
+        # train_dataloader = DataLoader((self.dataset_to_tensor(input_data, input_lang),self.dataset_to_tensor(target_data, output_lang)),
+        #      batch_size=self.batch_size, shuffle=True)
+        # input_tensor, target_tensor = next(iter(train_dataloader))
+
+        
+
         ''' Feed forward of network & calculating loss'''
-        for iter in range(1,  self.num_epochs + 1):
+        for i in range(1,  self.num_epochs + 1):
             
             ''' Prepare data. Shuffle dataset and create a minibatch tensor [sequence_len, batch_size]'''
-            input_data, target_data = self.randomize_seperate_data(data)
+            
+            # --- with own minibatching --- #
             minibatch_dataset_input = self.create_minibatch(input_data, self.batch_size, input_lang)
             minibatch_dataset_target = self.create_minibatch(target_data, self.batch_size, output_lang)
+            input_tensor = minibatch_dataset_input 
+            target_tensor = minibatch_dataset_target
 
-            input_tensor = minibatch_dataset_input#[iter- 1]    
-            target_tensor = minibatch_dataset_target#[iter- 1] 
-            
+            # --- with DataLoader --- #
+            # input_tensor, target_tensor = next(iter(train_dataloader))
+                  
 
             loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, calc_magnitude = self.calc_magnitude )
 
@@ -154,15 +168,15 @@ class RNN_Plain(LearningAlgorithm):
             plot_loss_total += loss
 
             ''' Print diagnostic '''
-            if iter % print_every == 0:
+            if i % print_every == 0:
                 print_loss_avg = print_loss_total / print_every
                 print_loss_total = 0
 
-                print('%s (%d %d%%) %.4f' % (timeSince(start, iter / self.num_epochs),
-                                            iter, iter / self.num_epochs * 100, print_loss_avg))
+                print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
+                                            i, i / self.num_epochs * 100, print_loss_avg))
 
 
-                # if iter % plot_every == 0:
+                # if i % plot_every == 0:
                 #     plot_loss_avg = plot_loss_total / plot_every
                 #     plot_losses.append(plot_loss_avg)
                 #     plot_loss_total = 0

@@ -4,6 +4,8 @@ EOS_token = 1
 import pandas as pd
 from typing import List, Tuple
 
+from preprocessing.csv_dataset import CSVDataset
+
 def int_to_binary_str(num: int, width: int) -> str:
     if num >= 0:
         binary = bin(num)[2:].zfill(width)
@@ -93,6 +95,11 @@ def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[L
         eq.addSentence(row)
     for row in y_test:
         eq.addSentence(row)
+
+
+    # train_data_iterable = CSVDataset('./data/eqs.csv', stringify=True)
+    # test_data_iterable = CSVDataset('./data/eqs-test.csv', stringify=True)
+    # return eq, seq, train_data_iterable, test_data_iterable
 
     return eq, seq, list(zip(X_train, y_train)), X_test, y_test
 

@@ -7,13 +7,15 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, embedding_size, batch_size):
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0) -> None:
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.batch_size = batch_size
+        self.num_layers = num_gru_layers
      
         self.embedding = nn.Embedding(input_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size)
+        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout)
+
 
     def forward(self, input, hidden):
         ''' 
@@ -26,18 +28,21 @@ class EncoderRNN(nn.Module):
                     eg.: seq_len: 1, batch_size: 2, embedding size: 3
                           [ [ [ 0.5, 0.2, 0.3 ],
                               [ 0.2, 0.6, 0.7 ] ] ]  
+        
+            Additional Comment:
+                 We need to unsqueeze the embedding output, 
+                because it gives out [num_batch, symbol_encoded_to_vector]
+                and GRU needs [sequence_len, num_batch, symbol_encoded_to_vector]
+                unsqueeze effectively adds a single dimensional array at the location specified, squeeze takes away 1-s
+
         '''
         # print("===> Encoder Input")
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
-        '''
-            We need to unsqueeze the embedding output, 
-            because it gives out [num_batch, symbol_encoded_to_vector]
-            and GRU needs [sequence_len, num_batch, symbol_encoded_to_vector]
-            unsqueeze effectively adds a single dimensional array at the location specified, squeeze takes away 1-s
-        '''
+        
+       
 
         embedded = self.embedding(input).unsqueeze(0) 
         output = embedded
@@ -51,17 +56,18 @@ class EncoderRNN(nn.Module):
         return output, hidden
 
     def initHidden(self):
-        return torch.zeros(1, self.batch_size, self.hidden_size, device=device)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=device)
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size, embedding_size, batch_size):
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0) -> None:
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.batch_size = batch_size
+        self.num_layers = num_gru_layers
 
         self.embedding = nn.Embedding(output_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size)
+        self.gru = nn.GRU(embedding_size, hidden_size, dropout = dropout, num_layers= num_gru_layers)
         
         self.out = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
@@ -87,6 +93,7 @@ class DecoderRNN(nn.Module):
         
         output = embedding 
         output = F.relu(output)
+
         output, hidden = self.gru(output, hidden)
 
         output = self.softmax(self.out(output[0]))
@@ -101,7 +108,7 @@ class DecoderRNN(nn.Module):
         return output, hidden
 
     def initHidden(self):
-        return torch.zeros(1, self.batch_size, self.hidden_size, device=device)
+        return torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=device)
 
 
 
