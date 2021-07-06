@@ -91,14 +91,17 @@ class IntegerSequenceEnv(gym.Env):
     state: TreeState
     syms = list('+*-0123456789t')
 
-    def __init__(self, int_sequence: List[int], output_length: int, input_lang: Lang, output_lang: Lang, evaluate: Evaluate):
+    def __init__(self, env_config):
+        self.output_length = env_config["output_length"]
+        self.input_lang = env_config["input_lang"]
+        self.output_lang = env_config["output_lang"]
+        self.evaluate = env_config["evaluate"]
+        self.int_sequence = env_config["int_sequence"]
+
         self.action_space = spaces.Discrete(len(self.syms))
-        self.observation_space = spaces.Tuple((spaces.Box(low=0, high=len(self.syms), shape=(output_length,), dtype= int), spaces.Box(low=0, high=input_lang.n_words, shape=(len(int_sequence),), dtype= int)))
-        self.output_length = output_length
-        self.input_lang = input_lang
-        self.output_lang = output_lang
-        self.evaluate = evaluate
-        self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
+        self.observation_space = spaces.Tuple((spaces.Box(low=0, high=len(self.syms), shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
+
+        self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
 
 
     def step(self, action):
@@ -112,12 +115,12 @@ class IntegerSequenceEnv(gym.Env):
         return (self.state, 0, False)
  
 
-    def reset(self, int_sequence: List[int], output_length: int, input_lang: Lang, output_lang: Lang):
-        # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
-        self.output_length = output_length
-        self.input_lang = input_lang
-        self.output_lang = output_lang
-        self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
+    def reset(self, env_config):
+        self.output_length = env_config["output_length"]
+        self.input_lang = env_config["input_lang"]
+        self.output_lang = env_config["output_lang"]
+        self.int_sequence = env_config["int_sequence"]
+        self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
 
     def render(self, mode='human', close=False):
         return self.state
