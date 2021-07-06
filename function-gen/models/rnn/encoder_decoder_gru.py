@@ -41,13 +41,9 @@ class EncoderRNN(nn.Module):
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
-        
-       
-
         embedded = self.embedding(input).unsqueeze(0) 
         output = embedded
         output, hidden = self.gru(output, hidden)
-
         
         # print("===> Encoder Output")
         # print("output " , output.shape)
@@ -98,7 +94,6 @@ class DecoderRNN(nn.Module):
         output, hidden = self.gru(output, hidden)
 
         output = self.softmax(self.out(output[0]))
-     
         output = output.unsqueeze(0)
        
         # print("===> Decoder Output")

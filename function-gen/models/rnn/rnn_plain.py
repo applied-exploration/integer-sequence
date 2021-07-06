@@ -21,7 +21,6 @@ from .encoder_decoder_gru import EncoderRNN, DecoderRNN
 from .combined_networks import train, infer
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
 from utils import showPlot, timeSince, asMinutes
-# from lang import load_data
 from lang import Lang
 
 
@@ -29,8 +28,6 @@ from line_profiler import LineProfiler
 
 lp = LineProfiler()
 
-
-# MAX_LENGTH = 10
 EOS_token = 0
 SOS_token = 1
 
@@ -62,6 +59,7 @@ class RNN_Plain(LearningAlgorithm):
         else:
             self.calc_magnitude = None
 
+    # WITH DATALOADER =>   
     # def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
     #     converted_data = []
 
@@ -101,18 +99,17 @@ class RNN_Plain(LearningAlgorithm):
         return input_data, target_data
 
     def create_minibatch(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
-
         encoded_dataset = [tensorFromSentence(lang, data[random.randrange(0, len(data))])
                         for i in range(batch_size)]
-
-        return torch.cat(encoded_dataset, dim=1) ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
+        
+        ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
+        return torch.cat(encoded_dataset, dim=1) 
 
 
     
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         print_every = max(1, math.floor(self.num_epochs/10))
-        # plot_every=100
 
         ''' For diagnosis'''
         start = time.time()
@@ -170,7 +167,6 @@ class RNN_Plain(LearningAlgorithm):
                 calc_magnitude = self.calc_magnitude )
 
             print_loss_total += loss
-            plot_loss_total += loss
 
             ''' Print diagnostic '''
             if i % print_every == 0:
@@ -181,19 +177,13 @@ class RNN_Plain(LearningAlgorithm):
                                             i, i / self.num_epochs * 100, print_loss_avg))
 
 
-                # if i % plot_every == 0:
-                #     plot_loss_avg = plot_loss_total / plot_every
-                #     plot_losses.append(plot_loss_avg)
-                #     plot_loss_total = 0
-
 
     def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
-
         ''' Prepare data '''
         stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
         input_tensor_minibatch = self.create_minibatch(stringified_inputs, self.batch_size, input_lang)
 
-        print("input_tensor_minibatch ", input_tensor_minibatch.shape)
+        ''' Push throught network '''
         output_list = infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang )
 
         return output_list
