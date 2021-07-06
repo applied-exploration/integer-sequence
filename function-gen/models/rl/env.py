@@ -93,7 +93,7 @@ class IntegerSequenceEnv(gym.Env):
 
     def __init__(self, int_sequence: List[int], output_length: int, input_lang: Lang, output_lang: Lang, evaluate: Evaluate):
         self.action_space = spaces.Discrete(len(self.syms))
-        # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
+        self.observation_space = spaces.Tuple((spaces.Box(low=0, high=len(self.syms), shape=(output_length,), dtype= int), spaces.Box(low=0, high=input_lang.n_words, shape=(len(int_sequence),), dtype= int)))
         self.output_length = output_length
         self.input_lang = input_lang
         self.output_lang = output_lang
