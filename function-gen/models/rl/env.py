@@ -18,7 +18,9 @@ def index_of_first(lst, pred):
     return None
 
 TreeState = Tuple[List[int], List[int]]
+Evaluate = Callable[[str, List[int]], float]
 
+### Node class - for tree structure, not used just yet.
 class Node:
     def __init__(self, key):
         self.left = None
@@ -38,20 +40,15 @@ def insert(root, key):
         root.right = insert(root.right, key)
     return root
 
-
-def generate_possibilities(char: str):
-    def list_possibilities(prev: str) -> List[str]:
-        if prev in ['1','2','3','4','5','6','7','8','9','0']:
-            return ['+', '-', '*']
-        elif prev in ['s', '+', '-', '*']:
-            return ['1','2','3','4','5','6','7','8','9','0','t']
-        elif prev in ['t']:
-            return ['+', '-', '*']
-        else:
-            raise ValueError('Unexpected prev character')
-    lhs = list_possibilities(char)
-    rhs = list_possibilities(char)
-    return lhs, rhs
+def list_possibilities(prev: str) -> List[str]:
+    if prev in ['1','2','3','4','5','6','7','8','9','0']:
+        return ['+', '-', '*']
+    elif prev in ['', '+', '-', '*']:
+        return ['1','2','3','4','5','6','7','8','9','0','t']
+    elif prev in ['t']:
+        return ['+', '-', '*']
+    else:
+        raise ValueError('Unexpected prev character')
 
 def encode_with_lang(lang: Lang, input):
     return [lang.word2index[word] for word in list(input)]
@@ -85,8 +82,8 @@ def is_state_complete(state: TreeState) -> bool:
 
 class IntegerSequenceEnv(gym.Env):  
     output_length: int
-    target_function: str
-    evaluate_tree: Callable[[str, str], float]
+    int_sequence: List[int]    
+    evaluate: Evaluate
 
     input_lang: Lang
     output_lang: Lang
@@ -94,14 +91,13 @@ class IntegerSequenceEnv(gym.Env):
     state: TreeState
     syms = list('+*-0123456789t')
 
-    def __init__(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang, evaluate_tree: Callable[[str, str], float]):
+    def __init__(self, int_sequence: List[int], output_length: int, input_lang: Lang, output_lang: Lang, evaluate: Evaluate):
         self.action_space = spaces.Discrete(len(self.syms))
         # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
-        self.output_length = len(target_function)
-        self.target_function = target_function
+        self.output_length = output_length
         self.input_lang = input_lang
         self.output_lang = output_lang
-        self.evaluate_tree = evaluate_tree
+        self.evaluate = evaluate
         self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
 
 
@@ -110,17 +106,15 @@ class IntegerSequenceEnv(gym.Env):
         self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action + 2)
         if is_state_complete(self.state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
-            score = self.evaluate_tree(candidate_eq, self.target_function)
+            score = self.evaluate(candidate_eq, self.state[1])
             return (self.state, score, True)
         
         return (self.state, 0, False)
  
 
-    def reset(self, int_sequence: List[int], target_function: str, input_lang: Lang, output_lang: Lang):
+    def reset(self, int_sequence: List[int], output_length: int, input_lang: Lang, output_lang: Lang):
         # self.observation_space = spaces.Tuple([spaces.Discrete(len(self.syms))] * len(target_function))
-        self.int_sequence = int_sequence
-        self.output_length = len(target_function)
-        self.target_function = target_function
+        self.output_length = output_length
         self.input_lang = input_lang
         self.output_lang = output_lang
         self.state = create_initial_state(self.input_lang, int_sequence, self.output_length)
