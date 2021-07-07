@@ -78,11 +78,11 @@ def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[L
     
     y_train = train_data["eqs"]
     X_train = train_data.drop('eqs', axis = 1)
-    X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+    X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7", "8"]].to_numpy()
 
     y_test = test_data["eqs"]
     X_test = test_data.drop('eqs', axis = 1)
-    X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+    X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7", "8"]].to_numpy()
 
     seq = Lang("seq", ',')
     for row in X_train:
