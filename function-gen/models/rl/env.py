@@ -99,7 +99,7 @@ class IntegerSequenceEnv(gym.Env):
         self.int_sequence = env_config["int_sequence"]
 
         self.action_space = spaces.Discrete(len(self.syms))
-        self.observation_space = spaces.Tuple((spaces.Box(low=0, high=len(self.syms), shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
+        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=len(self.syms), shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
 
         self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
 
@@ -110,17 +110,14 @@ class IntegerSequenceEnv(gym.Env):
         if is_state_complete(self.state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
             score = self.evaluate(candidate_eq, self.state[1])
-            return (self.state, score, True)
+            return (self.state, score, True, {})
         
-        return (self.state, 0, False)
+        return (self.state, 0, False, {})
  
 
-    def reset(self, env_config):
-        self.output_length = env_config["output_length"]
-        self.input_lang = env_config["input_lang"]
-        self.output_lang = env_config["output_lang"]
-        self.int_sequence = env_config["int_sequence"]
+    def reset(self):
         self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
+        return self.state
 
     def render(self, mode='human', close=False):
         return self.state
