@@ -18,7 +18,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: deeplearning
-          environment-file: environment.yml
+          environment-file: environment.yaml
       - uses: iterative/setup-cml@v1
       - name: Change folder
         run: |
