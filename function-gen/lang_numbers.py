@@ -3,6 +3,7 @@ EOS_token = 1
 
 import pandas as pd
 from typing import List, Tuple
+import numpy as np
 
 from preprocessing.csv_dataset import CSVDataset
 
@@ -63,6 +64,7 @@ class Lang:
                 self.addWord(word)
 
     def addWord(self, word):
+        print(word)
         if word not in self.word2index:
             self.word2index[word] = self.n_words
             self.word2count[word] = 1
@@ -73,22 +75,27 @@ class Lang:
 
 
 def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
-    train_data = pd.read_csv('./data/eqs.csv')
-    test_data = pd.read_csv('./data/eqs-test.csv')
+    train_data = pd.read_csv('./data/eqs.csv')[:1]
+    test_data = pd.read_csv('./data/eqs-test.csv')[:1]
     
     y_train = train_data["eqs"]
     X_train = train_data.drop('eqs', axis = 1)
     X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+
+    print(X_train)
+    largest_num = np.amax(X_train)
+    largest_num_length = len(str(largest_num))
 
     y_test = test_data["eqs"]
     X_test = test_data.drop('eqs', axis = 1)
     X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
 
     seq = Lang("seq", ',')
-    for row in X_train:
-        seq.addSentence(','.join([str(item) for item in row]))
-    for row in X_test:
-        seq.addSentence(','.join([str(item) for item in row]))
+    for row in ['-,0,1,2,3,4,5,6,7,8,9']:
+        seq.addSentence(row)
+    # for row in X_test:
+    #     seq.addSentence(row)
+
 
     eq = Lang("eq", '')
     for row in y_train:

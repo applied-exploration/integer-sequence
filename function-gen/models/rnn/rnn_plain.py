@@ -99,9 +99,39 @@ class RNN_Plain(LearningAlgorithm):
         return input_data, target_data
 
     def create_minibatch(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
+    
         encoded_dataset = [tensorFromSentence(lang, data[random.randrange(0, len(data))])
                         for i in range(batch_size)]
+
+        ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
+        return torch.cat(encoded_dataset, dim=1) 
+
+    def create_minibatch_input(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
         
+        print(data)
+        decimalized_dataset = []
+
+        test_char = tensorFromSentence(lang, '4')
+        print("test_char ", test_char)
+        for sequence in data:
+            list_of_num = sequence.split(',')
+            for number in list_of_num:
+                # decimalized_dataset.append(torch.cat([tensorFromSentence(lang,str(character)) for character in number]))
+                decimalized_dataset.append([tensorFromSentence(lang,str(character)) for character in number])
+        
+        # for number in 
+        # tensorized_one_batch = [tensorFromSentence(lang, number) 
+        #                 for number in decimalized_dataset[random.randrange(0, len(data))]
+        print(decimalized_dataset[:3])
+        print(decimalized_dataset[:3][0])
+
+        encoded_dataset = [[tensorFromSentence(lang, number) 
+                        for number in decimalized_dataset[random.randrange(0, len(data))]]
+                        for i in range(batch_size)]
+
+        print(encoded_dataset)
+
+
         ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
         return torch.cat(encoded_dataset, dim=1) 
 
@@ -151,7 +181,7 @@ class RNN_Plain(LearningAlgorithm):
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             
             # --- with own minibatching --- #
-            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang)
+            input_tensor_minibatch = self.create_minibatch_input(input_data, self.batch_size, input_lang)
             target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang)
 
             # --- with DataLoader --- #
