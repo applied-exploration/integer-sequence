@@ -16,12 +16,14 @@ jobs:
       #   with:
       #     python-version: '3.x'
       - uses: iterative/setup-cml@v1
-      - name: Train model
+      - name: Setup environment
         run: |
           conda init bash
           conda env create -f environment.yaml
           cd function-gen
           conda activate deeplearning
+      - name: Train model
+        run: |
           python test_rnn_plain.py >> results.txt
       - name: Write CML report
         env:
