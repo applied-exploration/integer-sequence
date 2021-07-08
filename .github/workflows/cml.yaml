@@ -34,6 +34,7 @@ jobs:
           conda list
       - name: Train model
         run: |
+          cat test_rnn_plain.py
           python test_rnn_plain.py >> results.txt
       - name: Write CML report
         env:
