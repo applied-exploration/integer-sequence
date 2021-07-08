@@ -19,7 +19,7 @@ jobs:
       - name: Train model
         run: |
           # Your ML workflow goes here
-          pip install -r requirements.txt
+          conda env create -f environment.yml
           cd function_gen
           python training_rnn.py >> results.txt
       - name: Write CML report
