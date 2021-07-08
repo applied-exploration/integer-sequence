@@ -21,7 +21,7 @@ jobs:
           # Your ML workflow goes here
           conda env create -f environment.yml
           cd function_gen
-          python training_rnn.py >> results.txt
+          python test_rnn_plain.py >> results.txt
       - name: Write CML report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
