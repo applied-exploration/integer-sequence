@@ -17,16 +17,21 @@ jobs:
       #     python-version: '3.x'
       - uses: conda-incubator/setup-miniconda@v2
         with:
+          auto-update-conda: false
           activate-environment: deeplearning
           environment-file: environment.yaml
-          auto-activate-base: false
+          python-version: 3.9
+      # - name: Setup Conda
+      #   run: |
+      #     $CONDA/bin/conda env update --file environment.yml --name base
       - uses: iterative/setup-cml@v1
       - name: Change folder
         run: |
-          conda activate deeplearning
           cd function-gen
           ls
           which python
+          conda info
+          conda list
       - name: Train model
         run: |
           python test_rnn_plain.py >> results.txt
