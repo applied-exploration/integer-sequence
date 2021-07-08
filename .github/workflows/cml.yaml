@@ -26,6 +26,7 @@ jobs:
       #     $CONDA/bin/conda env update --file environment.yml --name base
       - uses: iterative/setup-cml@v1
       - name: Change folder
+        shell: bash -l {0}
         run: |
           cd function-gen
           ls
@@ -33,6 +34,7 @@ jobs:
           conda info
           conda list
       - name: Train model
+        shell: bash -l {0}
         run: |
           cat test_rnn_plain.py
           python test_rnn_plain.py >> results.txt
