@@ -23,6 +23,8 @@ jobs:
       - name: Change folder
         run: |
           cd function-gen
+          ls
+          which python
       - name: Train model
         run: |
           python test_rnn_plain.py >> results.txt
