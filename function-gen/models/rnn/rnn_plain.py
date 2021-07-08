@@ -9,6 +9,7 @@ from learning_types import LearningAlgorithm
 import math
 import time
 import random
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -20,8 +21,9 @@ from torch.utils.data import DataLoader
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
 from .combined_networks import train, infer
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
-from utils import showPlot, timeSince, asMinutes
+from utils import showPlot, timeSince, asMinutes, normalize_0_1
 from lang import Lang
+
 
 
 from line_profiler import LineProfiler
@@ -106,6 +108,26 @@ class RNN_Plain(LearningAlgorithm):
         return torch.cat(encoded_dataset, dim=1) 
 
 
+    def get_weights(self, data:List[str]) -> List[float]:
+        ''' Get weights (distribution of symbols in dataset) '''
+      
+        counter = {}
+        count_by_index = np.zeros(self.output_size)
+        count_by_index[SOS_token] = len(data)
+        count_by_index[EOS_token] = len(data)
+
+        for word in data:
+            for letter in word:
+                if letter not in counter:
+                        counter[letter] = 0
+                counter[letter] += 1
+        
+        for i, symbol in enumerate(self.symbols):
+            count_by_index[i+2]= counter[symbol]
+
+        weights = normalize_0_1(count_by_index)
+        
+        return weights
     
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
@@ -122,6 +144,11 @@ class RNN_Plain(LearningAlgorithm):
         encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
         decoder_optimizer = optim.SGD(self.decoder.parameters(), lr=self.learning_rate)
 
+
+        ''' Prepare Data '''
+        input_data, target_data = self.seperate_data(data)
+        weights = self.get_weights(target_data)
+
         ''' 
         NLLLos requires 
             - an input tensor of negative logprobabilities 
@@ -133,10 +160,8 @@ class RNN_Plain(LearningAlgorithm):
               shaped [num_batches]. 
               eg.: [2, 5, 15] with num_batch 3. Each number represents a category
         '''
-        criterion = nn.NLLLoss()  
 
-        ''' Prepare Data '''
-        input_data, target_data = self.seperate_data(data)
+        criterion = nn.NLLLoss(weight = torch.FloatTensor(weights).to(device))  
 
         # --- with DataLoader --- # 
         # train_dataloader = DataLoader((self.dataset_to_tensor(input_data, input_lang),self.dataset_to_tensor(target_data, output_lang)),
@@ -151,8 +176,8 @@ class RNN_Plain(LearningAlgorithm):
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             
             # --- with own minibatching --- #
-            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang)
-            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang)
+            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang).to(device)
+            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang).to(device)
 
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
