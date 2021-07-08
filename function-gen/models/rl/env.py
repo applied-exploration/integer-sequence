@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
 from utils import normalize_0_1, eq_to_seq, is_eq_valid
+import random
 
 MAX_PENALTY_MAGNITUDE = 999.0
 
@@ -57,7 +58,8 @@ def encode_with_lang(lang: Lang, input):
 def decode_with_lang(lang: Lang, input):
     return [lang.index2word[word] for word in list(input)]
 
-def create_initial_state(input_lang: Lang, int_seq: List[int], output_length: int) -> TreeState:
+def create_initial_state(input_lang: Lang, data: List[List[int]], output_length: int) -> TreeState:
+    int_seq = random.choice(data)[0]
     seq = encode_with_lang(input_lang, [str(i) for i in int_seq])
     return ([-1] * output_length, seq)
 
@@ -96,7 +98,7 @@ def is_state_complete(state: TreeState) -> bool:
 
 class IntegerSequenceEnv(gym.Env):  
     output_length: int
-    int_sequence: List[int]    
+    data: List[List[int]]   
     evaluate: Evaluate
 
     input_lang: Lang
@@ -110,12 +112,12 @@ class IntegerSequenceEnv(gym.Env):
         self.input_lang = env_config["input_lang"]
         self.output_lang = env_config["output_lang"]
         self.evaluate = env_config["evaluate"]
-        self.int_sequence = env_config["int_sequence"]
+        self.data = env_config["data"]
+        self.state = create_initial_state(self.input_lang, self.data, self.output_length)
 
         self.action_space = spaces.Discrete(len(self.syms))
-        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
+        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.state[1]),), dtype= int)))
 
-        self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
 
 
     def step(self, action):
@@ -134,7 +136,7 @@ class IntegerSequenceEnv(gym.Env):
  
 
     def reset(self):
-        self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
+        self.state = create_initial_state(self.input_lang, self.data, self.output_length)
         return self.state
 
     def render(self, mode='human', close=False):
