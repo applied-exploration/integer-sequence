@@ -18,6 +18,7 @@ jobs:
       - uses: iterative/setup-cml@v1
       - name: Train model
         run: |
+          conda init bash
           conda env create -f environment.yaml
           cd function-gen
           conda activate deeplearning
