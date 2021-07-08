@@ -36,6 +36,7 @@ jobs:
       - name: Train model
         shell: bash -l {0}
         run: |
+          cd function-gen
           cat test_rnn_plain.py
           python test_rnn_plain.py >> results.txt
       - name: Write CML report
