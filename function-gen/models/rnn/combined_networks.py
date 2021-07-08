@@ -18,8 +18,11 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_optimizer.zero_grad()
     loss = 0
 
+    print(input_tensor.shape)
     input_length = input_tensor.size(0)
     target_length = target_tensor.size(0)
+    print("input_length ", input_length)
+    print("target_length ", target_length)
     batch_size_inferred = input_tensor.shape[1]
 
 
@@ -27,9 +30,13 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
     encoder_hidden = encoder.initHidden()
 
+    print("====== ENCODER ========")
+
     for ei in range(input_length):
+        print("input_tensor[ei] ", input_tensor[ei])
         encoder_output, encoder_hidden = encoder(input_tensor[ei], encoder_hidden)
-        encoder_outputs[ei] = encoder_output[0, 0]
+        print("encoder_hidden ", encoder_hidden.shape)
+        if with_attention == True: encoder_outputs[ei] = encoder_output[0]
 
     
     ''' DECODER '''
@@ -39,6 +46,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
     decoder_outputs = []
 
+    print("====== DECODER ========")
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
@@ -49,6 +57,10 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             
             decoder_outputs.append(decoder_output)
             decoder_squeezed = decoder_output.squeeze(0)
+
+            
+            print("decoder_output_squeezed ", decoder_squeezed.shape)
+            print("target_tensor[di] ", target_tensor[di])
 
             loss += criterion(decoder_squeezed, target_tensor[di])
             decoder_input = target_tensor[di].unsqueeze(0)  # Teacher forcing
@@ -68,6 +80,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
             
             decoder_output_squeezed = decoder_output.squeeze(0)
+            
+            print("decoder_output_squeezed ", decoder_output_squeezed.shape)
+            print("target_tensor[di] ", target_tensor[di])
             loss += criterion(decoder_output_squeezed, target_tensor[di])
 
 
@@ -100,7 +115,7 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
 
         for ei in range(input_length):
             encoder_output, encoder_hidden = encoder(input_tensor[ei], encoder_hidden)
-            encoder_outputs[ei] += encoder_output[0, 0]
+            if with_attention: encoder_outputs[ei] += encoder_output[0]
 
         ''' DECODER '''
         decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)

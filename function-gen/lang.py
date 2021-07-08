@@ -1,5 +1,5 @@
-SOS_token = 0
-EOS_token = 1
+EOS_token = 0
+SOS_token = 1
 
 import pandas as pd
 from typing import List, Tuple

@@ -156,7 +156,23 @@ class RNN_Plain(LearningAlgorithm):
 
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
-                  
+            
+            print("data")
+            print(data)
+
+            print("input_data")
+            print(input_data)
+           
+            print("target_data")
+            print(target_data)
+
+            print("input_tensor_minibatch")
+            print(input_tensor_minibatch.shape)
+            print(input_tensor_minibatch)
+            
+            print("target_tensor_minibatch")
+            print(target_tensor_minibatch.shape)
+            print(target_tensor_minibatch)
 
             loss = train(
                 input_tensor_minibatch, target_tensor_minibatch, 
