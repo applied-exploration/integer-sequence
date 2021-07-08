@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
 from utils import normalize_0_1, eq_to_seq, is_eq_valid
 
+MAX_PENALTY_MAGNITUDE = 999.0
 
 def index_of_first(lst, pred):
     for i,v in enumerate(lst):
@@ -48,7 +49,7 @@ def list_possibilities(prev: str) -> List[str]:
     elif prev in ['t']:
         return ['+', '-', '*']
     else:
-        raise ValueError('Unexpected prev character')
+        raise ValueError('Unexpected prev character', prev)
 
 def encode_with_lang(lang: Lang, input):
     return [lang.word2index[word] for word in list(input)]
@@ -65,6 +66,19 @@ def get_current_position(state: TreeState) -> int:
     index = index_of_first(state[0], lambda x: x == -1)
     if index is None: return 0
     return index
+
+def is_action_valid(state: TreeState, action: int, output_lang: Lang) -> bool:
+    pos = get_current_position(state)
+    if pos == 0: return True
+    last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
+    possibilities = list_possibilities(last_char)
+    next_char = decode_with_lang(output_lang, [action])[0]
+    if next_char in possibilities:
+        return True
+    else:
+        return False
+    
+    
 
 def insert_action_in_state(state: TreeState, action: int) -> TreeState:
     pos = get_current_position(state)
@@ -99,14 +113,18 @@ class IntegerSequenceEnv(gym.Env):
         self.int_sequence = env_config["int_sequence"]
 
         self.action_space = spaces.Discrete(len(self.syms))
-        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=len(self.syms), shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
+        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.int_sequence),), dtype= int)))
 
         self.state = create_initial_state(self.input_lang, self.int_sequence, self.output_length)
 
 
     def step(self, action):
         # offset action by 2, because we don't need SOS and EOS tokens here
-        self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action + 2)
+        action = action + 2
+        if not is_action_valid(self.state, action, self.output_lang):
+            return (insert_action_in_state((self.state[0].copy(), self.state[1]), action), -MAX_PENALTY_MAGNITUDE, True, {})
+
+        self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action)
         if is_state_complete(self.state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
             score = self.evaluate(candidate_eq, self.state[1])
