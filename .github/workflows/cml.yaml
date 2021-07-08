@@ -19,7 +19,8 @@ jobs:
       - name: Train model
         run: |
           conda env create -f environment.yaml
-          cd function_gen
+          cd function-gen
+          conda activate deeplearning
           python test_rnn_plain.py >> results.txt
       - name: Write CML report
         env:

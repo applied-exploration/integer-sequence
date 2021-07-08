@@ -10,7 +10,7 @@ train = train[:10]
 algo = RNN_Plain(symbols = "+*-0123456789t", 
 output_sequence_length = 9, 
 encoded_seq_length = 9, 
-num_epochs = 5000, 
+num_epochs = 1000, 
 input_size = input_lang.n_words, 
 hidden_size = 256, 
 output_size=output_lang.n_words, 
@@ -19,6 +19,11 @@ batch_size = 1,
 calc_magnitude_on=False)
 
 algo.train(input_lang, output_lang, train)
+
+# [i[0] for i in train]
+pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
+pred[:10]
+accuracy_score(pred, [i[0] for i in train])
 
 # pred = algo.infer(input_lang, output_lang, X_test[:1000])
 # pred[:25]
