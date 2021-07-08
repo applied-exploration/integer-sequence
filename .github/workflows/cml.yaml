@@ -44,5 +44,6 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Post reports as comments in GitHub PRs
+          cd function-gen
           cat results.txt >> report.md
           cml-send-comment report.md
