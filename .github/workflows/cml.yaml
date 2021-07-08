@@ -18,8 +18,7 @@ jobs:
       - uses: iterative/setup-cml@v1
       - name: Train model
         run: |
-          # Your ML workflow goes here
-          conda env create -f environment.yml
+          conda env create -f environment.yaml
           cd function_gen
           python test_rnn_plain.py >> results.txt
       - name: Write CML report
