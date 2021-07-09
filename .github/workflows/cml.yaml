@@ -1,0 +1,49 @@
+name: run-rnn-plain
+on: [push]
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    # optionally use a convenient Ubuntu LTS + CUDA + DVC + CML image
+    # container: docker://dvcorg/cml:0-dvc2-base1-gpu
+    # container: docker://ghcr.io/iterative/cml:0-dvc2-base1-gpu
+    steps:
+      - uses: actions/checkout@v2
+      # may need to setup NodeJS & Python3 on e.g. self-hosted
+      # - uses: actions/setup-node@v2
+      #   with:
+      #     node-version: '12'
+      # - uses: actions/setup-python@v2
+      #   with:
+      #     python-version: '3.x'
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: false
+          activate-environment: deeplearning
+          environment-file: environment.yaml
+          python-version: 3.9
+      # - name: Setup Conda
+      #   run: |
+      #     $CONDA/bin/conda env update --file environment.yml --name base
+      - uses: iterative/setup-cml@v1
+      - name: Change folder
+        shell: bash -l {0}
+        run: |
+          cd function-gen
+          ls
+          which python
+          conda info
+          conda list
+      - name: Train model
+        shell: bash -l {0}
+        run: |
+          cd function-gen
+          cat test_rnn_plain.py
+          python test_rnn_plain.py >> results.txt
+      - name: Write CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Post reports as comments in GitHub PRs
+          cd function-gen
+          cat results.txt >> report.md
+          cml-send-comment report.md
