@@ -24,9 +24,9 @@ from utils import showPlot, timeSince, asMinutes
 from lang import Lang
 
 
-from line_profiler import LineProfiler
+# from line_profiler import LineProfiler
 
-lp = LineProfiler()
+# lp = LineProfiler()
 
 EOS_token = 0
 SOS_token = 1
@@ -98,8 +98,8 @@ class RNN_Plain(LearningAlgorithm):
 
         return input_data, target_data
 
-    def create_minibatch(self, data: List[str], batch_size:int, lang: Lang) -> List[torch.tensor]:
-        encoded_dataset = [tensorFromSentence(lang, data[random.randrange(0, len(data))])
+    def create_minibatch(self, data: List[str], batch_size:int, lang: Lang, randomized_indeces:List[int]) -> List[torch.tensor]:
+        encoded_dataset = [tensorFromSentence(lang, data[randomized_indeces])
                         for i in range(batch_size)]
         
         ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
@@ -149,11 +149,11 @@ class RNN_Plain(LearningAlgorithm):
         for i in range(1,  self.num_epochs + 1):
             
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
-            
             # --- with own minibatching --- #
-            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang)
-            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang)
-
+            randomized_indeces = random.randrange(0, len(data))
+            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang, randomized_indeces)
+            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang, randomized_indeces)
+ 
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
                   
@@ -194,8 +194,9 @@ class RNN_Plain(LearningAlgorithm):
             ''' Push throught network '''
             output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
 
-        input_tensor_minibatch = self.create_minibatch(stringified_inputs[-remainder:], remainder, input_lang)
-        output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
+        if remainder > 0 : 
+            input_tensor_minibatch = self.create_minibatch(stringified_inputs[-remainder:], remainder, input_lang)
+            output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
         
         return output_list
         
