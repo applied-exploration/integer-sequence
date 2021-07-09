@@ -22,7 +22,6 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     target_length = target_tensor.size(0)
     batch_size_inferred = input_tensor.shape[1]
 
-
     ''' ENCODER '''
     encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
     encoder_hidden = encoder.initHidden()
@@ -108,7 +107,7 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
 
         for di in range(max_length):
             if with_attention:
-                decoder_output, decoder_hidden, decoder_attention = self.decoder(
+                decoder_output, decoder_hidden, decoder_attention = decoder(
                     decoder_input, decoder_hidden, encoder_outputs)
                 decoder_attentions[di] = decoder_attention.data
             else:

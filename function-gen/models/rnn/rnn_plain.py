@@ -98,9 +98,8 @@ class RNN_Plain(LearningAlgorithm):
 
         return input_data, target_data
 
-    def create_minibatch(self, data: List[str], batch_size:int, lang: Lang, randomized_indeces:List[int]) -> List[torch.tensor]:
-        encoded_dataset = [tensorFromSentence(lang, data[randomized_indeces])
-                        for i in range(batch_size)]
+    def create_minibatch(self, data: List[str], lang: Lang, indices:List[int]) -> torch.tensor:
+        encoded_dataset = [tensorFromSentence(lang, data[index]) for index in indices]
         
         ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
         return torch.cat(encoded_dataset, dim=1) 
@@ -150,9 +149,9 @@ class RNN_Plain(LearningAlgorithm):
             
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             # --- with own minibatching --- #
-            randomized_indeces = random.randrange(0, len(data))
-            input_tensor_minibatch = self.create_minibatch(input_data, self.batch_size, input_lang, randomized_indeces)
-            target_tensor_minibatch = self.create_minibatch(target_data, self.batch_size, output_lang, randomized_indeces)
+            randomized_indices = [random.randrange(0, len(data)) for _ in range(0, self.batch_size)]
+            input_tensor_minibatch = self.create_minibatch(input_data, input_lang, randomized_indices)
+            target_tensor_minibatch = self.create_minibatch(target_data, output_lang, randomized_indices)
  
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
@@ -186,17 +185,18 @@ class RNN_Plain(LearningAlgorithm):
         remainder = len(data) % self.batch_size
 
         output_list = []
+        indicies_within_batch = list(range(0, self.batch_size))
 
         for i in range(num_batches):
             ''' Prepare data '''
-            input_tensor_minibatch = self.create_minibatch(stringified_inputs[i*self.batch_size:(i+1)*self.batch_size], self.batch_size, input_lang)
+            input_tensor_minibatch = self.create_minibatch(stringified_inputs[i*self.batch_size:(i+1)*self.batch_size], input_lang, indicies_within_batch)
             
             ''' Push throught network '''
             output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
 
         if remainder > 0 : 
-            input_tensor_minibatch = self.create_minibatch(stringified_inputs[-remainder:], remainder, input_lang)
-            output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
+            input_tensor_minibatch = self.create_minibatch(stringified_inputs[-remainder:], input_lang, list(range(len(data) - remainder, len(data))))
+            output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang, i))
         
         return output_list
         

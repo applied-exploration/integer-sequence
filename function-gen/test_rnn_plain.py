@@ -24,9 +24,9 @@ algo.train(input_lang, output_lang, train)
 
 # calculate accuracy from the training set (fails because of something after mini-batch is implemented)
 
-# pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
-# pred[:10]
-# accuracy_score(pred, [i[0] for i in train])
+pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
+pred[:10]
+accuracy_score(pred, [i[0] for i in train])
 
 
 # calculate accuracy from the test set
