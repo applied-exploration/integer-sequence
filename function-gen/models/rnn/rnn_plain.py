@@ -181,23 +181,9 @@ class RNN_Plain(LearningAlgorithm):
         ''' Prepare data '''
         stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
         
-        num_batches = math.floor(len(data) / self.batch_size)
-        remainder = len(data) % self.batch_size
+        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))))
+        output_list = infer(input_tensor_batch, self.encoder, self.decoder, output_lang )
 
-        output_list = []
-        indicies_within_batch = list(range(0, self.batch_size))
-
-        for i in range(num_batches):
-            ''' Prepare data '''
-            input_tensor_minibatch = self.create_minibatch(stringified_inputs[i*self.batch_size:(i+1)*self.batch_size], input_lang, indicies_within_batch)
-            
-            ''' Push throught network '''
-            output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang ))
-
-        if remainder > 0 : 
-            input_tensor_minibatch = self.create_minibatch(stringified_inputs[-remainder:], input_lang, list(range(len(data) - remainder, len(data))))
-            output_list.extend(infer(input_tensor_minibatch, self.encoder, self.decoder, output_lang, i))
-        
         return output_list
         
     def save(self, name: str):
