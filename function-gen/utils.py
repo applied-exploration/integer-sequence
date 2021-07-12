@@ -1,6 +1,7 @@
 from sympy import *
 from random import choice
 from typing import List
+import wandb
 
 def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
@@ -77,7 +78,11 @@ def eq_decoder(encoded: List[int]) -> str:
 
 def accuracy_score(pred: List[str], target: List[str]) -> float:
     is_valid = [eq_to_seq(pair[0], 9) == eq_to_seq(pair[1], 9) for pair in zip(pred, target)]
-    return is_valid.count(1) / len(is_valid)
+
+    accuracy = is_valid.count(1) / len(is_valid)
+    wandb.log({'accuracy': accuracy})
+
+    return accuracy
 
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
