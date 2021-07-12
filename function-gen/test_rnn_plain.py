@@ -19,7 +19,7 @@ my_config ={"symbols": "+*-0123456789t",
 "embedding_size": 256, 
 "batch_size": 32, 
 "num_gru_layers": 1,
-"dropout_prob": 0.3,
+"dropout_prob": 0.,
 "calc_magnitude_on":False}
 
 training_size = 100
