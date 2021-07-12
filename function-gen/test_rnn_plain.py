@@ -5,7 +5,10 @@ from utils import accuracy_score
 
 import wandb
 
-wandb.login()
+import os
+wsb_token = os.environ["WANDB_API_KEY"]
+wandb.login(key=wsb_token)
+
 
 output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
 
