@@ -12,7 +12,7 @@ output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
 my_config ={"symbols": "+*-0123456789t", 
 "output_sequence_length": 9, 
 "encoded_seq_length": 9, 
-"num_epochs": 100, 
+"num_epochs": 2500, 
 "input_size": input_lang.n_words, 
 "hidden_size": 256, 
 "output_size": output_lang.n_words, 
