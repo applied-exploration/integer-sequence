@@ -18,7 +18,7 @@ my_config ={"symbols": "+*-0123456789t",
 "output_size": output_lang.n_words, 
 "embedding_size": 256, 
 "batch_size": 32, 
-"num_gru_layers": 3,
+"num_gru_layers": 1,
 "dropout_prob": 0.3,
 "calc_magnitude_on":False}
 
