@@ -35,6 +35,8 @@ jobs:
           conda list
       - name: Train model
         shell: bash -l {0}
+        env: 
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
           cd function-gen
           cat test_rnn_plain.py
