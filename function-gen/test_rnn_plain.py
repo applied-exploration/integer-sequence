@@ -4,20 +4,26 @@ from lang import load_data_int_seq
 from utils import accuracy_score
 
 output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
-print("Experiment 1: Training size: 100, Batch size: 32, Epochs: 2000, Dropout: 0")
-train = train[:100]
+
+num_epochs = 2500
+batch_size = 32
+dropout = 0.0
+training_size = 100
+
+print("Experiment 1: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, batch_size, num_epochs, dropout))
+train = train[:training_size]
 
 algo = RNN_Plain(symbols = "+*-0123456789t", 
 output_sequence_length = 9, 
 encoded_seq_length = 9, 
-num_epochs = 2500, 
+num_epochs = num_epochs, 
 input_size = input_lang.n_words, 
 hidden_size = 256, 
 output_size=output_lang.n_words, 
 embedding_size = 256, 
-batch_size = 32, 
+batch_size = batch_size, 
 num_gru_layers = 1,
-dropout_prob = 0.,
+dropout_prob = dropout,
 calc_magnitude_on=False)
 
 algo.train(input_lang, output_lang, train)

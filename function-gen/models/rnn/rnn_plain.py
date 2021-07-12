@@ -160,6 +160,7 @@ class RNN_Plain(LearningAlgorithm):
         '''
 
         criterion = nn.NLLLoss(weight = torch.FloatTensor(weights).to(device))  
+        # criterion = nn.NLLLoss()  
 
         # --- with DataLoader --- # 
         # train_dataloader = DataLoader((self.dataset_to_tensor(input_data, input_lang),self.dataset_to_tensor(target_data, output_lang)),
@@ -205,7 +206,7 @@ class RNN_Plain(LearningAlgorithm):
         ''' Prepare data '''
         stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
         
-        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))))
+        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data)))).to(device)
         output_list = infer(input_tensor_batch, self.encoder, self.decoder, output_lang )
 
         return output_list
