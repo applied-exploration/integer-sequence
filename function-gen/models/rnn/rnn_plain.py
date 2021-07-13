@@ -23,6 +23,8 @@ from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
 from utils import showPlot, timeSince, asMinutes
 from lang import Lang
 
+import wandb
+
 
 # from line_profiler import LineProfiler
 
@@ -51,6 +53,9 @@ class RNN_Plain(LearningAlgorithm):
         self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
         self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
 
+        wandb.watch(self.encoder, log_freq=100)
+        wandb.watch(self.decoder, log_freq=100)
+        
         print(self.encoder)
         print(self.decoder)
 
@@ -172,6 +177,7 @@ class RNN_Plain(LearningAlgorithm):
                 print_loss_avg = print_loss_total / print_every
                 print_loss_total = 0
 
+                wandb.log({'loss': print_loss_avg, 'epoch': i})
                 print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
                                             i, i / self.num_epochs * 100, print_loss_avg))
 
