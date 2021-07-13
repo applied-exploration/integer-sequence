@@ -6,7 +6,7 @@ early_terminate:
   type: hyperband
   min_iter: 3
 metric:
-  goal: minimize
+  goal: maximize
   name: accuracy
 parameters:
   output_sequence_length:
