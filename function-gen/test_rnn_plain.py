@@ -5,7 +5,7 @@ from utils import accuracy_score
 
 import wandb
 import torch
-torch.backends.cudnn.enabled = False 
+# torch.backends.cudnn.enabled = False  # This is needed for Dani's local sweep
 
 import os
 wsb_token = os.environ.get('WANDB_API_KEY')
