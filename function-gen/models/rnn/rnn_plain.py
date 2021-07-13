@@ -56,6 +56,7 @@ class RNN_Plain(LearningAlgorithm):
         wandb.watch(self.encoder, log_freq=100)
         wandb.watch(self.decoder, log_freq=100)
         
+        print("Num_batch: ", self.batch_size)
         print(self.encoder)
         print(self.decoder)
 
