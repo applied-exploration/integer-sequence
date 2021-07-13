@@ -4,10 +4,14 @@ from lang import load_data_int_seq
 from utils import accuracy_score
 
 import wandb
+import torch
+torch.backends.cudnn.enabled = False 
 
 import os
-wsb_token = os.environ["WANDB_API_KEY"]
-wandb.login(key=wsb_token)
+wsb_token = os.environ.get('WANDB_API_KEY')
+
+if wsb_token: wandb.login(key=wsb_token)
+else: wandb.login()
 
 
 output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
@@ -25,7 +29,7 @@ my_config ={"symbols": "+*-0123456789t",
 "dropout_prob": 0.,
 "calc_magnitude_on":False}
 
-training_size = 100
+training_size = min(training_size, len(train))
 
 wandb.init(project="integer-sequence",  config={**my_config, "training_size": training_size})
 
@@ -36,16 +40,16 @@ train = train[:training_size]
 algo = RNN_Plain(**my_config)
 algo.train(input_lang, output_lang, train)
 
-# calculate accuracy from the training set
-pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
+''' calculate accuracy from the training set '''
+# pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
+# print("Accuracy score on training set: ", accuracy_score(pred, [i[1] for i in train]))
 # pred[:10]
-print("Accuracy score on training set: ", accuracy_score(pred, [i[1] for i in train]))
+
+''' calculate accuracy from the test set '''
+pred = algo.infer(input_lang, output_lang, X_test[:1000])
+accuracy_score(pred, y_test[:1000])
+# pred[:25]
+
 
 if wandb.run is not None:
     wandb.finish()
-
-# calculate accuracy from the test set
-
-# pred = algo.infer(input_lang, output_lang, X_test[:1000])
-# pred[:25]
-# accuracy_score(pred, y_test[:1000])

@@ -1,5 +1,10 @@
 program: test_rnn_plain.py
 method: bayes
+project: integer-sequence
+name: Finding best hyperparameters for a trainingset of 10k
+early_terminate:
+  type: hyperband
+  min_iter: 100
 metric:
   goal: minimize
   name: accuracy
@@ -24,14 +29,14 @@ parameters:
     min: 64
     distribution: int_uniform
   training_size:
-    value: 100
+    value: 10000
     distribution: constant
   dropout_prob:
     max: 0.45
-    min: 0.15
+    min: 0.0
     distribution: uniform
   output_size:
-    value: 10
+    value: 16
     distribution: constant
   hidden_size:
     max: 512
