@@ -23,12 +23,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     batch_size_inferred = input_tensor.shape[1]
 
     ''' ENCODER '''
-    encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
     encoder_hidden = encoder.initHidden()
-
-    for ei in range(input_length):
-        encoder_output, encoder_hidden = encoder(input_tensor[ei], encoder_hidden)
-        encoder_outputs[ei] = encoder_output[0, 0]
+    encoder_output, encoder_hidden = encoder(input_tensor, encoder_hidden)
 
     
     ''' DECODER '''
@@ -42,7 +38,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
             if with_attention == True:
-                decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_outputs)
+                decoder_output, decoder_hidden, decoder_attention = decoder(decoder_input, decoder_hidden, encoder_output)
             else:
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             
@@ -95,11 +91,8 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
 
         ''' ENCODER '''
         encoder_hidden = encoder.initHidden(batch_size = batch_size_inferred)
-        encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
+        encoder_output, encoder_hidden = encoder(input_tensor, encoder_hidden)
 
-        for ei in range(input_length):
-            encoder_output, encoder_hidden = encoder(input_tensor[ei], encoder_hidden)
-            encoder_outputs[ei] += encoder_output[0, 0]
 
         ''' DECODER '''
         decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
@@ -108,7 +101,7 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
         for di in range(max_length):
             if with_attention:
                 decoder_output, decoder_hidden, decoder_attention = decoder(
-                    decoder_input, decoder_hidden, encoder_outputs)
+                    decoder_input, decoder_hidden, encoder_output)
                 decoder_attentions[di] = decoder_attention.data
             else:
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)  
