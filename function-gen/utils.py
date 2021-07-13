@@ -130,3 +130,9 @@ def normalize_1_255(a: np.ndarray) -> np.ndarray:
 def normalize_minus1_1(a: np.ndarray) -> np.ndarray:
     # Normalised [-1,1]
     return 2.*(a - np.min(a))/np.ptp(a)-1
+
+
+def remove_key(d, key):
+    r = dict(d)
+    del r[key]
+    return r

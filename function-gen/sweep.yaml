@@ -4,7 +4,7 @@ project: integer-sequence
 name: Finding best hyperparameters for a trainingset of 10k
 early_terminate:
   type: hyperband
-  min_iter: 100
+  min_iter: 3
 metric:
   goal: minimize
   name: accuracy
@@ -16,10 +16,8 @@ parameters:
     value: 9
     distribution: constant
   calc_magnitude_on:
-    values:
-      - "false"
-      - "true"
-    distribution: categorical
+    value: False
+    distribution: constant
   num_gru_layers:
     max: 3
     min: 1
@@ -43,7 +41,7 @@ parameters:
     min: 64
     distribution: int_uniform
   num_epochs:
-    value: 2500
+    value: 10000
     distribution: constant
   # input_size:
   #   max: 8600
