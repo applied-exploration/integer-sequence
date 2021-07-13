@@ -41,7 +41,7 @@ class EncoderRNN(nn.Module):
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
-        embedded = self.embedding(input).unsqueeze(0) 
+        embedded = self.embedding(input)
         output = embedded
         output, hidden = self.gru(output, hidden)
         
