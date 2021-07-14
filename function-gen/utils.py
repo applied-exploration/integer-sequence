@@ -82,7 +82,6 @@ def accuracy_score(pred: List[str], target: List[str]) -> float:
     is_valid = [eq_to_seq(pair[0], 9) == eq_to_seq(pair[1], 9) for pair in zip(pred, target)]
 
     accuracy = is_valid.count(1) / len(is_valid)
-    wandb.log({'accuracy': accuracy})
 
     return accuracy
 

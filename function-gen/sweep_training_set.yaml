@@ -1,7 +1,7 @@
-program: test_rnn_plain.py
-method: bayes
+program: rnn_sweep.py
+method: grid
 project: integer-sequence
-name: Trainingset of [50, 100, 1000, 10000, 20000] - epoch 20k
+name: Trainingset of [100, 1000, 5000, 10000, 50000, 100000, 300000] - epoch 1.2k
 early_terminate:
   type: hyperband
   min_iter: 3
@@ -25,10 +25,10 @@ parameters:
     value: 256
     distribution: constant
   training_size:
-    values: [50, 100, 1000, 10000, 20000]
+    values: [100, 1000, 5000, 10000, 50000, 100000, 300000]
     distribution: categorical
   dropout_prob:
-    value: 0.32
+    value: 0.0
     distribution: constant
   output_size:
     value: 16
@@ -37,7 +37,7 @@ parameters:
     value: 430
     distribution: constant
   num_epochs:
-    value: 20000
+    value: 1200
     distribution: constant
   # input_size:
   #   max: 8600
