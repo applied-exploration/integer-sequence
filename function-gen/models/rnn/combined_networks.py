@@ -13,7 +13,6 @@ MAX_LENGTH = 10
 
 
 def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, calc_magnitude = None, max_length=MAX_LENGTH, seed = 1):
-    random.seed(seed)
 
     encoder_optimizer.zero_grad()
     decoder_optimizer.zero_grad()
