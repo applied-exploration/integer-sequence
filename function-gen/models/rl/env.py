@@ -130,6 +130,7 @@ class IntegerSequenceEnv(gym.Env):
         if is_state_complete(self.state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
             score = self.evaluate(candidate_eq, self.state[1])
+            print(candidate_eq, self.state[1], score)
             return (self.state, score, True, {})
         
         return (self.state, 0, False, {})

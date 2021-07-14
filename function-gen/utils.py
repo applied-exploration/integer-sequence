@@ -3,6 +3,8 @@ from random import choice
 from typing import List
 import wandb
 
+def flatten(list_of_lists):
+    return [item for sublist in list_of_lists for item in sublist]
 
 def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
