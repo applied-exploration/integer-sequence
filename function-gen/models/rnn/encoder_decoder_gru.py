@@ -61,7 +61,7 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seeed:int = 1) -> None:
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1) -> None:
         super(DecoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
