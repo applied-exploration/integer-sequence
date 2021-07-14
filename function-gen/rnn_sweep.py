@@ -57,8 +57,8 @@ pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
 wandb.log({'accuracy_train': accuracy_score(pred, [i[1] for i in train])})
 
 ''' 7. Calculate accuracy from the test set '''
-pred = algo.infer(input_lang, output_lang, X_test[:config["training_size"]])
-wandb.log({'accuracy': accuracy_score(pred, y_test[:config["training_size"]])})
+pred = algo.infer(input_lang, output_lang, X_test[:config["test_size"]])
+wandb.log({'accuracy': accuracy_score(pred, y_test[:config["test_size"]])})
 
 
 if wandb.run is not None:

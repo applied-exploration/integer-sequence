@@ -1,7 +1,7 @@
 program: rnn_sweep.py
 method: grid
 project: integer-sequence
-name: Trainingset of [100, 1000, 5000, 10000, 50000, 100000, 300000] - epoch 1.2k
+name: Trainingset of [100, 1000, 5000, 10000, 50000, 100000, 300000] - epoch 20k
 early_terminate:
   type: hyperband
   min_iter: 3
@@ -27,6 +27,9 @@ parameters:
   training_size:
     values: [100, 1000, 5000, 10000, 50000, 100000, 300000]
     distribution: categorical
+  test_size:
+    value: 10000
+    distribution: constant
   dropout_prob:
     value: 0.0
     distribution: constant
@@ -37,7 +40,7 @@ parameters:
     value: 430
     distribution: constant
   num_epochs:
-    value: 1200
+    value: 20000
     distribution: constant
   # input_size:
   #   max: 8600
