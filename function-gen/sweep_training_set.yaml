@@ -27,6 +27,9 @@ parameters:
   training_size:
     values: [100, 1000, 5000, 10000, 50000, 100000, 300000]
     distribution: categorical
+  test_size:
+    value: 10000
+    distribution: constant
   dropout_prob:
     value: 0.0
     distribution: constant
