@@ -7,14 +7,18 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1) -> None:
         super(EncoderRNN, self).__init__()
+        
+        self.seed = torch.manual_seed(seed)
+
         self.hidden_size = hidden_size
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
      
         self.embedding = nn.Embedding(input_size, embedding_size)
         self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout)
+
 
 
     def forward(self, input, hidden):
@@ -57,8 +61,11 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0) -> None:
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seeed:int = 1) -> None:
         super(DecoderRNN, self).__init__()
+        
+        self.seed = torch.manual_seed(seed)
+
         self.hidden_size = hidden_size
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
@@ -68,6 +75,7 @@ class DecoderRNN(nn.Module):
         
         self.out = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
+
 
     def forward(self, input, hidden):
         ''' 

@@ -15,7 +15,8 @@ sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 class RNN_GA_Unified(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs_rnn: int, population_size: int, input_size: int, output_size: int, hidden_size: int = 256, learning_rate: float = 0.01, calc_magnitude_on=False, num_epochs_ga: int = 20):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs_rnn: int, population_size: int, input_size: int, output_size: int, hidden_size: int = 256, learning_rate: float = 0.01, calc_magnitude_on=False, num_epochs_ga: int = 20, seed:int = 1):
+        random.seed(seed)
 
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length

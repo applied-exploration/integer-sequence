@@ -1,7 +1,7 @@
 program: test_rnn_plain.py
 method: bayes
 project: integer-sequence
-name: Finding best hyperparameters for a trainingset of 1k - epoch 20k
+name: Trainingset of [50, 100, 1000, 10000, 20000] - epoch 20k
 early_terminate:
   type: hyperband
   min_iter: 3
@@ -19,27 +19,23 @@ parameters:
     value: False
     distribution: constant
   num_gru_layers:
-    max: 2
-    min: 1
-    distribution: int_uniform
-  embedding_size:
-    max: 360
-    min: 64
-    distribution: int_uniform
-  training_size:
-    value: 1000
+    value: 1
     distribution: constant
+  embedding_size:
+    value: 256
+    distribution: constant
+  training_size:
+    values: [50, 100, 1000, 10000, 20000]
+    distribution: categorical
   dropout_prob:
-    max: 0.45
-    min: 0.0
-    distribution: uniform
+    value: 0.32
+    distribution: constant
   output_size:
     value: 16
     distribution: constant
   hidden_size:
-    max: 512
-    min: 64
-    distribution: int_uniform
+    value: 430
+    distribution: constant
   num_epochs:
     value: 20000
     distribution: constant
@@ -48,9 +44,8 @@ parameters:
   #   min: 2150
   #   distribution: int_uniform
   batch_size:
-    max: 64
-    min: 1
-    distribution: int_uniform
+    value: 40
+    distribution: constant
   symbols:
     values:
       - +*-0123456789t

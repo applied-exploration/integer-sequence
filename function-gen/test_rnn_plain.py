@@ -30,7 +30,8 @@ default_config = dict(
     batch_size= 32, 
     num_gru_layers= 1,
     dropout_prob= 0.,
-    calc_magnitude_on=False)
+    calc_magnitude_on=False,
+    seed=1)
 
 training_size = 100
 training_size = min(training_size, len(train))
@@ -44,7 +45,7 @@ train = train[:config["training_size"]]
 stripped_config = remove_key(config, "training_size")
 
 ''' 5. Create Model and train it '''
-print("Experiment: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, config["batch_size"], config["num_epochs"], config["dropout_prob"]))
+print("Experiment: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(config["training_size"], config["batch_size"], config["num_epochs"], config["dropout_prob"]))
 algo = RNN_Plain(**stripped_config)
 algo.train(input_lang, output_lang, train)
 
