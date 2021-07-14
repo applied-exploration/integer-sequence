@@ -37,7 +37,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, calc_magnitude_on:bool = False):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, calc_magnitude_on:bool = False, seed:int = 1):
+        
+        random.seed(seed)
+        
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
@@ -50,8 +53,8 @@ class RNN_Plain(LearningAlgorithm):
         self.output_size = output_size
         self.embedding_size = embedding_size
         self.batch_size = batch_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob).to(device)
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed).to(device)
 
         wandb.watch(self.encoder, log_freq=100)
         wandb.watch(self.decoder, log_freq=100)

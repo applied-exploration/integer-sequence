@@ -3,6 +3,7 @@ from random import choice
 from typing import List
 import wandb
 
+
 def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
