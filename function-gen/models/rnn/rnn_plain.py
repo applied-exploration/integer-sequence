@@ -12,15 +12,13 @@ import random
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.distributions import Categorical
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
 from .combined_networks import train, infer
-from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
-from utils import showPlot, timeSince, asMinutes
+from .rnn_utils import tensorFromSentence, calc_magnitude
+from utils import timeSince
 from lang import Lang
 
 import wandb
@@ -114,16 +112,13 @@ class RNN_Plain(LearningAlgorithm):
         return torch.cat(encoded_dataset, dim=1) 
 
 
-    
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         print_every = max(1, math.floor(self.num_epochs/10))
 
         ''' For diagnosis'''
         start = time.time()
-        plot_losses = []
         print_loss_total = 0  # Reset every print_every
-        plot_loss_total = 0  # Reset every plot_every
 
 
         ''' Defining Optimization parameters'''

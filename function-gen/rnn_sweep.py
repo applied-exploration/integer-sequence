@@ -1,5 +1,5 @@
 from models.rnn.rnn_plain import RNN_Plain
-
+from models.rnn.combined_networks import train_report
 from lang import load_data_int_seq
 from utils import accuracy_score, remove_key
 
@@ -50,15 +50,15 @@ stripped_config = remove_key(remove_key(config, "training_size"), "test_size")
 ''' 5. Create Model and train it '''
 print("Experiment: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(config["training_size"], config["batch_size"], config["num_epochs"], config["dropout_prob"]))
 algo = RNN_Plain(**stripped_config)
-algo.train(input_lang, output_lang, train)
+train_report(algo, input_lang, output_lang, train, X_test, y_test, config["num_epochs"])
 
 ''' 6. Calculate accuracy from the training set '''
 pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
 wandb.log({'accuracy_train': accuracy_score(pred, [i[1] for i in train])})
 
-''' 7. Calculate accuracy from the test set '''
-pred = algo.infer(input_lang, output_lang, X_test[:config["test_size"]])
-wandb.log({'accuracy': accuracy_score(pred, y_test[:config["test_size"]])})
+''' 7. Calculate accuracy from the whole test set '''
+pred = algo.infer(input_lang, output_lang, X_test)
+wandb.log({'accuracy_full': accuracy_score(pred, y_test)})
 
 
 if wandb.run is not None:
