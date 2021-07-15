@@ -50,7 +50,7 @@ stripped_config = remove_key(remove_key(config, "training_size"), "test_size")
 ''' 5. Create Model and train it '''
 print("Experiment: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(config["training_size"], config["batch_size"], config["num_epochs"], config["dropout_prob"]))
 algo = RNN_Plain(**stripped_config)
-train_report(algo, input_lang, output_lang, train, X_test, y_test, 10000)
+train_report(algo, input_lang, output_lang, train, X_test, y_test, config["num_epochs"])
 
 ''' 6. Calculate accuracy from the training set '''
 pred = algo.infer(input_lang, output_lang, [i[0] for i in train])
