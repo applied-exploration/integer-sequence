@@ -33,7 +33,7 @@ def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
     try:
         # if "t" not in eq:
         #     return False
-        results = [parse_expr(eq, local_dict = {'t': num}, evaluate=True) for num in test_set]
+        results = [eval(eq.replace('t', str(num))) for num in test_set]
         if len(set(results)) == 1:
             return False
         elif zoo in results:

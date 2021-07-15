@@ -44,6 +44,7 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
 
 def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, calc_magnitude = None, max_length=MAX_LENGTH, seed = 1):
 
+
     encoder_optimizer.zero_grad()
     decoder_optimizer.zero_grad()
     loss = 0
@@ -97,8 +98,9 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
 
     if calc_magnitude is not None:
-        magnitude = calc_magnitude(decoder_outputs, target_tensor, input_lang, output_lang)
-        loss = loss * magnitude
+        sliced_decoder_outputs = [[dec_output[:,i] for dec_output in decoder_outputs] for i in range(0, batch_size_inferred)]
+        magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), input_lang, output_lang) for i in range(0, batch_size_inferred)]
+        loss = loss + (sum(magnitudes) / len(magnitudes))
 
     loss.backward()
 
