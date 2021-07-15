@@ -7,6 +7,7 @@ from typing import List, Tuple
 from learning_types import LearningAlgorithm
 from lang import Lang
 from utils import accuracy_score, mae_score
+import wandb
 
 import random
 
@@ -20,13 +21,23 @@ MAX_LENGTH = 10
 ''' Trains the LearningAlgorithm and reports every 1000 epoch'''
 def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, training_data: List[Tuple[List[int], str]], test_data_X: List[List[int]], test_data_y: List[str], num_epochs: int) -> None:
     num_batches = max(1, int(num_epochs / 1000))
-    algo.num_epoch = 1000
+    algo.num_epochs = 1000
+
+    sampled_test_X = test_data_X[:1000]
+    sampled_test_y = test_data_y[:1000]
+
     for _ in range(0, num_batches):
         algo.train(input_lang, output_lang, training_data)
+        pred_test = algo.infer(input_lang, output_lang, sampled_test_X)
+        accuracy_test = accuracy_score(pred_test, sampled_test_y)
+        mae_test = mae_score(pred_test, sampled_test_y)
+        print("Accuracy score on test set: ", accuracy_test)
+        print("Mean Absolute Error  on test set: ", mae_test)
+        wandb.log({
+            'accuracy_test': accuracy_test,
+            'mae_test': mae_test
+        })
 
-        pred = algo.infer(input_lang, output_lang, test_data_X)
-        print("Accuracy score on training set: ", accuracy_score(pred, test_data_y))
-        print("Accuracy score on test set: ", accuracy_score(pred, test_data_y))
 
 
 
