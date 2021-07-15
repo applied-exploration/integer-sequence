@@ -1,7 +1,7 @@
 from models.rnn.rnn_plain import RNN_Plain
 
 from lang import load_data_int_seq
-from utils import accuracy_score
+from utils import accuracy_score, mae_score
 
 import wandb
 
@@ -45,8 +45,9 @@ print("Accuracy score on training set: ", accuracy_score(pred, [i[1] for i in tr
 # pred[:10]
 
 ''' calculate accuracy from the test set '''
-# pred = algo.infer(input_lang, output_lang, X_test[:1000])
-# accuracy_score(pred, y_test[:1000])
+pred = algo.infer(input_lang, output_lang, X_test[:1000])
+print("MAE on the test set: ", mae_score(pred, [i[1] for i in train]))
+
 # pred[:25]
 
 

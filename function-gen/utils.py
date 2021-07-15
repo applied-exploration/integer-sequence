@@ -85,6 +85,15 @@ def accuracy_score(pred: List[str], target: List[str]) -> float:
 
     return accuracy
 
+def mae_score(pred: List[str], target: List[str]) -> float:
+
+    def mae(lhs: List[int], rhs: List[int]) -> int:
+        difference = [abs(n1 - n2) for n1, n2 in zip(lhs, rhs)]
+        return sum(difference)
+    maes = [mae(eq_to_seq(pair[0], 9), eq_to_seq(pair[1], 9)) for pair in zip(pred, target)]
+
+    return sum(maes) / len(pred)
+
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import matplotlib.ticker as ticker
