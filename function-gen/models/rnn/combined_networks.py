@@ -34,8 +34,8 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
         print("Accuracy score on test set: ", accuracy_test)
         print("Mean Absolute Error  on test set: ", mae_test)
         wandb.log({
-            'accuracy_test': accuracy_test,
-            'mae_test': mae_test
+            'accuracy': accuracy_test,
+            'mae': mae_test
         })
 
 
