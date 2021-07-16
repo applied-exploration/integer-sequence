@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .encoder_decoder_gru import AttnDecoderRNN, EncoderRNN, DecoderRNN
-from .combined_networks import train
+from .combined_networks import train, Loss
 from .rnn_utils import tensorsFromPair, tensorFromSentence, calc_magnitude
 from utils import timeSince
 from lang import Lang
@@ -30,23 +30,20 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Attention(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, learning_rate: float = 0.01, calc_magnitude_on = False):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, learning_rate: float = 0.01, loss: Loss = Loss.NLL):
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
         self.num_epochs = num_epochs
 
         self.learning_rate = learning_rate
+        self.loss = loss
 
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.output_size = output_size
         self.encoder = EncoderRNN(self.input_size, self.hidden_size).to(device)
         self.decoder = AttnDecoderRNN(self.hidden_size, self.output_size, dropout_p=0.1).to(device)
-
-        if calc_magnitude_on:
-            self.calc_magnitude = calc_magnitude
-        else: self.calc_magnitude = None
 
     def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
         converted_data = []
@@ -80,7 +77,7 @@ class RNN_Attention(LearningAlgorithm):
             input_tensor = training_pair[0]
             target_tensor = training_pair[1]
 
-            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = True, calc_magnitude= self.calc_magnitude )
+            loss = train(input_tensor, target_tensor, self.encoder, self.decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = True, loss_type = self.loss )
             print_loss_total += loss
             plot_loss_total += loss
 

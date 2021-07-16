@@ -8,8 +8,9 @@ from learning_types import LearningAlgorithm
 from lang import Lang
 from utils import accuracy_score, mae_score
 import wandb
-
+from enum import Enum
 import random
+from .rnn_utils import calc_magnitude
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -39,10 +40,13 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
         })
 
 
+class Loss(Enum):
+    NLL = 1
+    NLL_Plus_MAE = 2
+    NLL_Multiply_MAE = 3
 
 
-
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, calc_magnitude = None, max_length=MAX_LENGTH, seed = 1):
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, loss_type: Loss = Loss.NLL, max_length=MAX_LENGTH, seed = 1):
 
 
     encoder_optimizer.zero_grad()
@@ -96,11 +100,16 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             decoder_output_squeezed = decoder_output.squeeze(0)
             loss += criterion(decoder_output_squeezed, target_tensor[di])
 
-
-    if calc_magnitude is not None:
+    if loss_type != Loss.NLL:
         sliced_decoder_outputs = [[dec_output[:,i] for dec_output in decoder_outputs] for i in range(0, batch_size_inferred)]
-        magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), input_lang, output_lang) for i in range(0, batch_size_inferred)]
-        loss = loss + (sum(magnitudes) / len(magnitudes))
+        magnitudes = []
+        if loss_type == Loss.NLL_Plus_MAE:
+            magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 19) for i in range(0, batch_size_inferred)]
+            loss = loss + (sum(magnitudes) / len(magnitudes))
+
+        elif loss_type == Loss.NLL_Multiply_MAE:
+            magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 9) for i in range(0, batch_size_inferred)]
+            loss = loss * (sum(magnitudes) / len(magnitudes))
 
     loss.backward()
 

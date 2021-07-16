@@ -1,5 +1,5 @@
 from models.rnn.rnn_plain import RNN_Plain
-from models.rnn.combined_networks import train_report
+from models.rnn.combined_networks import train_report, Loss
 from lang import load_data_int_seq
 from utils import accuracy_score, remove_key
 
@@ -30,7 +30,7 @@ default_config = dict(
     batch_size= 32, 
     num_gru_layers= 1,
     dropout_prob= 0.,
-    calc_magnitude_on=False,
+    loss=Loss.NLL,
     seed=1)
 
 training_size = 100

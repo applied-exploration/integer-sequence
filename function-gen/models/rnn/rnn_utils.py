@@ -59,8 +59,8 @@ def compare_sequences(output_sequence: np.ndarray, target_sequence: np.ndarray) 
 
 
 
-def calc_magnitude(decoder_outputs, target_outputs, input_lang, output_lang):
-    max_penalty_magnitude = torch.tensor(19., dtype=torch.float64)
+def calc_magnitude(decoder_outputs, target_outputs, output_lang, max_penalty: float):
+    max_penalty_magnitude = torch.tensor(max_penalty, dtype=torch.float64)
   
     decoded_output_symbols = []
     decoded_target_symbols = []
