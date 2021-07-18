@@ -46,7 +46,7 @@ print("Accuracy score on training set: ", accuracy_score(pred, [i[1] for i in tr
 
 ''' calculate accuracy from the test set '''
 pred = algo.infer(input_lang, output_lang, X_test[:1000])
-print("MAE on the test set: ", mae_score(pred, y_test))
+print("MAE on the test set: ", mae_score(pred, y_test[:1000]))
 
 # pred[:25]
 
