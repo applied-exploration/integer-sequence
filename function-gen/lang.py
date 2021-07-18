@@ -3,6 +3,7 @@ EOS_token = 1
 
 import pandas as pd
 from typing import List, Tuple
+import numpy as np
 
 from preprocessing.csv_dataset import CSVDataset
 
@@ -72,17 +73,27 @@ class Lang:
             self.word2count[word] += 1
 
 
-def load_data_int_seq() -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
+def transform_to_returns(seq):
+    diffed = np.diff(seq)
+    return np.concatenate(([seq[0]], diffed), axis=0)
+
+
+def load_data_int_seq(returns = False) -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
     train_data = pd.read_csv('./data/eqs.csv')
     test_data = pd.read_csv('./data/eqs-test.csv')
     
+
     y_train = train_data["eqs"]
     X_train = train_data.drop('eqs', axis = 1)
     X_train = X_train[["0", "1", "2", "3", "4", "5", "6", "7", "8"]].to_numpy()
 
+
     y_test = test_data["eqs"]
     X_test = test_data.drop('eqs', axis = 1)
     X_test = X_test[["0", "1", "2", "3", "4", "5", "6", "7", "8"]].to_numpy()
+    if returns == True:
+        X_train = np.apply_along_axis(transform_to_returns, 1, X_train)
+        X_test = np.apply_along_axis(transform_to_returns, 1, X_test)
 
     seq = Lang("seq", ',')
     for row in X_train:
