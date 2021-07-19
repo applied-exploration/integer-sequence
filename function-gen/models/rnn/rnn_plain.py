@@ -16,7 +16,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
-from .combined_networks import train, infer
+from .combined_networks import train, infer, Loss
 from .rnn_utils import tensorFromSentence, calc_magnitude
 from utils import timeSince
 from lang import Lang
@@ -35,7 +35,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, calc_magnitude_on:bool = False, seed:int = 1):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, seed:int = 1):
         
         random.seed(seed)
         
@@ -45,6 +45,7 @@ class RNN_Plain(LearningAlgorithm):
         self.num_epochs = num_epochs
 
         self.learning_rate = learning_rate
+        self.loss = loss
 
         self.hidden_size = hidden_size
         self.input_size = input_size
@@ -60,11 +61,6 @@ class RNN_Plain(LearningAlgorithm):
         print("Num_batch: ", self.batch_size)
         print(self.encoder)
         print(self.decoder)
-
-        if calc_magnitude_on:
-            self.calc_magnitude = calc_magnitude
-        else:
-            self.calc_magnitude = None
 
     # WITH DATALOADER =>   
     # def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
@@ -167,7 +163,7 @@ class RNN_Plain(LearningAlgorithm):
                 encoder_optimizer, decoder_optimizer, 
                 criterion, 
                 input_lang, output_lang, 
-                calc_magnitude = self.calc_magnitude )
+                loss_type = self.loss )
 
             print_loss_total += loss
 

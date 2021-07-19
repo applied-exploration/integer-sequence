@@ -1,5 +1,5 @@
 from models.rnn.rnn_plain import RNN_Plain
-
+from models.rnn.combined_networks import Loss
 from lang import load_data_int_seq
 from utils import accuracy_score, mae_score
 
@@ -25,7 +25,7 @@ my_config ={"symbols": "+*-0123456789t",
 "batch_size": 32, 
 "num_gru_layers": 1,
 "dropout_prob": 0.,
-"calc_magnitude_on":False}
+"loss":Loss.NLL}
 
 training_size = 100
 training_size = min(training_size, len(train))
@@ -46,7 +46,7 @@ print("Accuracy score on training set: ", accuracy_score(pred, [i[1] for i in tr
 
 ''' calculate accuracy from the test set '''
 pred = algo.infer(input_lang, output_lang, X_test[:1000])
-print("MAE on the test set: ", mae_score(pred, y_test))
+print("MAE on the test set: ", mae_score(pred, y_test[:1000]))
 
 # pred[:25]
 

@@ -15,8 +15,8 @@ parameters:
   encoded_seq_length:
     value: 9
     distribution: constant
-  calc_magnitude_on:
-    value: False
+  loss:
+    value: 1
     distribution: constant
   num_gru_layers:
     max: 2

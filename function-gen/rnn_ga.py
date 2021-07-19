@@ -11,11 +11,11 @@ import math
 import random
 from utils import eq_encoder, eq_decoder, is_eq_valid
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-
+from models.rnn.combined_networks import Loss
 
 class RNN_GA_Unified(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs_rnn: int, population_size: int, input_size: int, output_size: int, hidden_size: int = 256, learning_rate: float = 0.01, calc_magnitude_on=False, num_epochs_ga: int = 20, seed:int = 1):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int, mutation_rate: int, num_epochs_rnn: int, population_size: int, input_size: int, output_size: int, hidden_size: int = 256, learning_rate: float = 0.01, loss:Loss= Loss.NLL, num_epochs_ga: int = 20, seed:int = 1):
         random.seed(seed)
 
         self.symbols = symbols
@@ -27,7 +27,7 @@ class RNN_GA_Unified(LearningAlgorithm):
         self.population_size = population_size
 
         self.rnn = RNN_Plain(symbols=self.symbols, output_sequence_length=output_sequence_length, encoded_seq_length=encoded_seq_length, num_epochs=num_epochs_rnn,
-                             input_size=input_size, hidden_size=hidden_size, output_size=output_size, calc_magnitude_on=calc_magnitude_on)
+                             input_size=input_size, hidden_size=hidden_size, output_size=output_size, loss = loss)
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         self.rnn.train(input_lang, output_lang, data)
