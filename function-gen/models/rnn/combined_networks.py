@@ -64,6 +64,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     
     ''' DECODER '''
     decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
+    print(encoder_hidden.shape)
+    # decoder_hidden = decoder.initHidden(encoder_hidden)
     decoder_hidden = encoder_hidden
 
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False

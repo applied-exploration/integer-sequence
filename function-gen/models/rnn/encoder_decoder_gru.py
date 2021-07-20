@@ -7,7 +7,7 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -15,9 +15,10 @@ class EncoderRNN(nn.Module):
         self.hidden_size = hidden_size
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
+        self.bidirectional = bidirectional
      
         self.embedding = nn.Embedding(input_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout)
+        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
 
 
 
@@ -57,11 +58,13 @@ class EncoderRNN(nn.Module):
 
     def initHidden(self, batch_size = None):
         if batch_size == None : batch_size = self.batch_size
-        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
+
+        if self.bidirectional: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
+        else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1) -> None:
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
         super(DecoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -70,8 +73,10 @@ class DecoderRNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
 
+        self.bidirectional = bidirectional
+
         self.embedding = nn.Embedding(output_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, dropout = dropout, num_layers= num_gru_layers)
+        self.gru = nn.GRU(embedding_size, hidden_size, dropout = dropout, num_layers= num_gru_layers, bidirectional=self.bidirectional)
         
         self.out = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
@@ -101,8 +106,17 @@ class DecoderRNN(nn.Module):
 
         output, hidden = self.gru(output, hidden)
 
-        output = self.softmax(self.out(output[0]))
-        output = output.unsqueeze(0)
+        # output = self.softmax(self.out(output[0]))
+        print(output.shape)
+        output = output.view(-1, self.batch_size, self.hidden_size)
+        print(output.shape)
+        output= self.out(output)
+        print(output.shape)
+        output = self.softmax(output)
+        print(output.shape)
+
+        # output = output.unsqueeze(0)
+        # print(output.shape)
        
         # print("===> Decoder Output")
         # print("output " , output.shape)
@@ -110,10 +124,28 @@ class DecoderRNN(nn.Module):
         # print("<=================")
 
         return output, hidden
+    
+    def _cat_directions(self, h):
+        """ If the encoder is bidirectional, do the following transformation.
+            (#directions * #layers, #batch, hidden_size) -> (#layers, #batch, #directions * hidden_size)
+        """
+        if self.bidirectional:
+            h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
+        return h
 
-    def initHidden(self, batch_size = None):
-        if batch_size == None: batch_size = self.batch_size
-        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
+    def initHidden(self, encoder_hidden):
+        # if batch_size == None : batch_size = self.batch_size
+
+        # if self.bidirectional: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
+        # else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
+        """ Initialize the encoder hidden state. """
+        if encoder_hidden is None:
+            return None
+        if isinstance(encoder_hidden, tuple):
+            encoder_hidden = tuple([self._cat_directions(h) for h in encoder_hidden])
+        else:
+            encoder_hidden = self._cat_directions(encoder_hidden)
+        return encoder_hidden
 
 
 
