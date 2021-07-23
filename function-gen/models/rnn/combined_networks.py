@@ -65,9 +65,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     ''' DECODER '''
     decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
 
-    # decoder_hidden = decoder.initHidden(encoder_hidden)
-    encoder_out = encoder_hidden
-
+    print(encoder_hidden.shape)
     decoder_hidden = encoder_hidden.unsqueeze(0)
 
 

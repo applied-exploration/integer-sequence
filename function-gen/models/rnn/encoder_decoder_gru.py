@@ -55,7 +55,8 @@ class EncoderRNN(nn.Module):
             hidden_forward = hidden[-2,:,:]
             hidden_backward = hidden[-1,:,:]
             hidden = torch.cat((hidden_forward, hidden_backward), dim = 1)
-
+        else:
+            hidden = hidden.squeeze(0)
 
 
         # print("===> Encoder Output")
