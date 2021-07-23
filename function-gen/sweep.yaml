@@ -1,10 +1,10 @@
 program: rnn_sweep.py
 method: bayes
 project: integer-sequence
-name: Finding best hyperparameters for a trainingset of 1k - epoch 20k
+name: Finding best hyperparameters for a trainingset of 1k - epoch 25k
 early_terminate:
   type: hyperband
-  min_iter: 3
+  min_iter: 2000
 metric:
   goal: maximize
   name: accuracy
@@ -23,7 +23,7 @@ parameters:
     min: 1
     distribution: int_uniform
   embedding_size:
-    max: 360
+    max: 1024
     min: 64
     distribution: int_uniform
   training_size:
@@ -33,25 +33,29 @@ parameters:
     value: 1000
     distribution: constant
   dropout_prob:
-    max: 0.45
+    max: 0.5
     min: 0.0
     distribution: uniform
   output_size:
     value: 16
     distribution: constant
   hidden_size:
-    max: 512
+    max: 1024
     min: 64
     distribution: int_uniform
   num_epochs:
-    value: 20000
+    value: 25000
     distribution: constant
-  # input_size:
-  #   max: 8600
-  #   min: 2150
-  #   distribution: int_uniform
   batch_size:
-    max: 64
+    max: 256
+    min: 1
+    distribution: int_uniform
+  binary_encoding:
+    max: 0
+    min: 1
+    distribution: int_uniform
+  bidirectional:
+    max: 0
     min: 1
     distribution: int_uniform
   symbols:

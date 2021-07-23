@@ -71,40 +71,12 @@ class Lang:
         else:
             self.word2count[word] += 1
 
-class NumberLang:
-    def __init__(self, name, split_char):
-        self.type = LangType.Number
-        self.name = name
-        self.word2index = {}
-        self.word2count = {}
-        self.index2word = {}
-        self.n_words = 0
-        self.split_char = split_char
-
-    def addSentence(self, sentence):
-        if self.split_char != '':
-            for word in sentence.split(self.split_char):
-                self.addWord(word)
-        else:
-            for word in list(sentence):
-                self.addWord(word)
-
-    def addWord(self, word):
-        if word not in self.word2index:
-            self.word2index[str(word)] = word
-            self.word2count[word] = 1
-            self.index2word[str(word)] = word
-            self.n_words += 1
-        else:
-            self.word2count[word] += 1
-
-
 def transform_to_returns(seq):
     diffed = np.diff(seq)
     return np.concatenate(([seq[0]], diffed), axis=0)
 
 
-def load_data_int_seq(returns = False, binary_encoding = False) -> Tuple[Lang, NumberLang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
+def load_data_int_seq(returns = False) -> Tuple[Lang, Lang, List[Tuple[List[int], str]], List[List[int]], List[str]]:
     train_data = pd.read_csv('./data/eqs.csv')
     test_data = pd.read_csv('./data/eqs-test.csv')
     
@@ -121,10 +93,7 @@ def load_data_int_seq(returns = False, binary_encoding = False) -> Tuple[Lang, N
         X_train = np.apply_along_axis(transform_to_returns, 1, X_train)
         X_test = np.apply_along_axis(transform_to_returns, 1, X_test)
 
-    if binary_encoding == True:
-        seq = NumberLang("seq", ',')
-    else:
-        seq = Lang("seq", ',')
+    seq = Lang("seq", ',')
 
     for row in X_train:
         seq.addSentence(','.join([str(item) for item in row]))

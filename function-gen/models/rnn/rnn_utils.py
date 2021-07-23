@@ -10,13 +10,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 EOS_token = 0
 SOS_token = 1
 
-def indexesFromSentence(lang, sentence):
-    # print(lang.type)
-    if lang.type == LangType.Number:
+def indexesFromSentence(lang, sentence, binary_encoding):
+    if binary_encoding == True and lang.name == "seq":
         if ',' in sentence: 
-            return [int(lang.word2index[word]) for word in sentence.split(',') if word is not '']
+            return [int(word) for word in sentence.split(',') if word is not '']
         else:
-            return [int(lang.word2index[word]) for word in list(sentence)]
+            return [int(word) for word in list(sentence)]
     else:
         if ',' in sentence: 
             return [lang.word2index[word] for word in sentence.split(',') if word is not '']
@@ -24,15 +23,15 @@ def indexesFromSentence(lang, sentence):
             return [lang.word2index[word] for word in list(sentence)]
 
 
-def tensorFromSentence(lang, sentence):
-    indexes = indexesFromSentence(lang, sentence)
+def tensorFromSentence(lang, sentence, binary_encoding: bool):
+    indexes = indexesFromSentence(lang, sentence, binary_encoding)
     indexes.append(EOS_token)
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
 
 
-def tensorsFromPair(pair, input_lang, output_lang):
-    input_tensor = tensorFromSentence(input_lang, pair[0])
-    target_tensor = tensorFromSentence(output_lang, pair[1])
+def tensorsFromPair(pair, input_lang, output_lang: bool, binary_encoding: bool):
+    input_tensor = tensorFromSentence(input_lang, pair[0], binary_encoding)
+    target_tensor = tensorFromSentence(output_lang, pair[1], binary_encoding)
     return (input_tensor, target_tensor)
 
 

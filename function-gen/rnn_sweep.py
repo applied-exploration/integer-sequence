@@ -31,6 +31,7 @@ default_config = dict(
     num_gru_layers= 1,
     dropout_prob= 0.,
     loss=Loss.NLL,
+    bidirectional = False,
     seed=1)
 
 training_size = 100

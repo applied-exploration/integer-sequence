@@ -57,16 +57,10 @@ if WANDB_ACTIVATE:
 print("Experiment 1, with Embedding layer: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, my_config["batch_size"], my_config["num_epochs"], my_config["dropout_prob"]))
 
 algo = RNN_Plain(**my_config)
-
 test_algo(algo, input_lang, output_lang, train, X_test, y_test)
 
 
 # With Binary encoding layer
-
-output_lang, input_lang, train, X_test, y_test = load_data_int_seq(binary_encoding= True)
-training_size = 100
-training_size = min(training_size, len(train))
-train = train[:training_size]
 
 my_config["binary_encoding"] = True
 
