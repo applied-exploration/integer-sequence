@@ -103,7 +103,6 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
             
             decoder_output_squeezed = decoder_output.squeeze(0)
-            print(decoder_output_squeezed.shape)
             loss += criterion(decoder_output_squeezed, target_tensor[di])
 
     if loss_type != Loss.NLL:
