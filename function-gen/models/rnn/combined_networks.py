@@ -65,7 +65,6 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     ''' DECODER '''
     decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
 
-    print(encoder_hidden.shape)
     decoder_hidden = encoder_hidden.unsqueeze(0)
 
 
@@ -140,7 +139,7 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
 
         ''' DECODER '''
         decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
-        decoder_hidden = encoder_hidden
+        decoder_hidden = encoder_hidden.unsqueeze(0)
 
         for di in range(max_length):
             if with_attention:
