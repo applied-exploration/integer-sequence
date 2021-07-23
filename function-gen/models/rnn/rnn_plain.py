@@ -1,5 +1,4 @@
-import sys
-import os
+import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from typing import List, Tuple
@@ -35,7 +34,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, cnn_output_depth:int=512, cnn_kernel_size:int=3, seed:int = 1, bidirectional:bool=False, wandb_activate:bool=True):
+
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, cnn_output_depth:int=512, cnn_kernel_size:int=3, seed:int = 1, bidirectional:bool=False, wandb_activate:bool=True, binary_encoding:bool = False):
         
         random.seed(seed)
         self.wandb_activate = wandb_activate
@@ -53,7 +53,8 @@ class RNN_Plain(LearningAlgorithm):
         self.output_size = output_size
         self.embedding_size = embedding_size
         self.batch_size = batch_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, cnn_output_depth = cnn_output_depth, cnn_kernel_size = cnn_kernel_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional).to(device)
+
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, cnn_output_depth = cnn_output_depth, cnn_kernel_size = cnn_kernel_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding= binary_encoding).to(device)
         self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
 
         
