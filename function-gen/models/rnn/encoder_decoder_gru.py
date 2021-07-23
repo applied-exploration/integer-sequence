@@ -7,7 +7,7 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: int = 512, cnn_kernel_size:int = 3, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False) -> None:
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -16,9 +16,11 @@ class EncoderRNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
         self.bidirectional = bidirectional
-     
+        
         self.embedding = nn.Embedding(input_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
+        self.cnn = nn.Conv1d(embedding_size, cnn_output_depth, kernel_size=cnn_kernel_size, stride=1, padding=1)
+
+        self.gru = nn.GRU(cnn_output_depth, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
 
 
 
@@ -48,8 +50,20 @@ class EncoderRNN(nn.Module):
         
         
         embedded = self.embedding(input) 
-        output = embedded
+
+
+        # print("=== ")
+        # print("embedded output", embedded.shape)
+        embedded = embedded.transpose(0,1).transpose(1,2)
+
+        output =  self.cnn(embedded)
+
+        output = output.transpose(0,1).transpose(0,2)
+        # print("CNN output reshaped", output.shape)
+        
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
+        
+        # print("===")
         
         if self.bidirectional: 
             hidden_forward = hidden[-2,:,:]
