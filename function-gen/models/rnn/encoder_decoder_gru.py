@@ -45,11 +45,14 @@ class EncoderRNN(nn.Module):
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
-
-        embedded = self.embedding(input)
-        output = embedded
-        output, hidden = self.gru(output, hidden)
         
+        
+        embedded = self.embedding(input) 
+        output = embedded
+        output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
+        
+        if self.bidirectional: hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim = 1)
+
         # print("===> Encoder Output")
         # print("output " , output.shape)
         # print("hidden ", hidden.shape )
@@ -64,7 +67,7 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1, bidirectional_encoder:bool=False) -> None:
         super(DecoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -73,12 +76,17 @@ class DecoderRNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
 
-        self.bidirectional = bidirectional
+        self.bidirectional_encoder = bidirectional_encoder
 
         self.embedding = nn.Embedding(output_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, dropout = dropout, num_layers= num_gru_layers, bidirectional=self.bidirectional)
         
-        self.out = nn.Linear(hidden_size, output_size)
+        bidirectional_multiplier = 1
+        if self.bidirectional_encoder: 
+            bidirectional_multiplier =2
+
+        self.gru = nn.GRU(embedding_size, hidden_size * bidirectional_multiplier, dropout = dropout, num_layers= num_gru_layers)
+        
+        self.out = nn.Linear(hidden_size * bidirectional_multiplier, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
 
@@ -99,24 +107,16 @@ class DecoderRNN(nn.Module):
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
+        
         embedding = self.embedding(input)
         
         output = embedding 
         output = F.relu(output)
 
         output, hidden = self.gru(output, hidden)
-
-        # output = self.softmax(self.out(output[0]))
-        print(output.shape)
-        output = output.view(-1, self.batch_size, self.hidden_size)
-        print(output.shape)
-        output= self.out(output)
-        print(output.shape)
-        output = self.softmax(output)
-        print(output.shape)
-
-        # output = output.unsqueeze(0)
-        # print(output.shape)
+        output = self.softmax(self.out(output[0]))
+   
+        output = output.unsqueeze(0)
        
         # print("===> Decoder Output")
         # print("output " , output.shape)
@@ -129,14 +129,14 @@ class DecoderRNN(nn.Module):
         """ If the encoder is bidirectional, do the following transformation.
             (#directions * #layers, #batch, hidden_size) -> (#layers, #batch, #directions * hidden_size)
         """
-        if self.bidirectional:
+        if self.bidirectional_encoder:
             h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
         return h
 
     def initHidden(self, encoder_hidden):
         # if batch_size == None : batch_size = self.batch_size
 
-        # if self.bidirectional: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
+        # if self.bidirectional_encoder: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
         # else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
         """ Initialize the encoder hidden state. """
         if encoder_hidden is None:

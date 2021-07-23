@@ -64,9 +64,12 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     
     ''' DECODER '''
     decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
-    print(encoder_hidden.shape)
+
     # decoder_hidden = decoder.initHidden(encoder_hidden)
-    decoder_hidden = encoder_hidden
+    encoder_out = encoder_hidden
+    print("encoder_out ", encoder_hidden.shape)
+    decoder_hidden = encoder_hidden.unsqueeze(0)
+
 
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
     decoder_outputs = []
@@ -100,6 +103,8 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
             
             decoder_output_squeezed = decoder_output.squeeze(0)
+            print(decoder_output_squeezed.shape)
+            print( target_tensor.shape)
             loss += criterion(decoder_output_squeezed, target_tensor[di])
 
     if loss_type != Loss.NLL:
