@@ -6,10 +6,13 @@ from utils import accuracy_score, mae_score
 import wandb
 
 import os
-wsb_token = os.environ.get('WANDB_API_KEY')
 
-if wsb_token: wandb.login(key=wsb_token)
-else: wandb.login()
+WANDB_ACTIVATE = False
+
+if WANDB_ACTIVATE:
+    wsb_token = os.environ.get('WANDB_API_KEY')
+    if wsb_token: wandb.login(key=wsb_token)
+    else: wandb.login()
 
 
 output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
@@ -25,12 +28,15 @@ my_config ={"symbols": "+*-0123456789t",
 "batch_size": 32, 
 "num_gru_layers": 1,
 "dropout_prob": 0.,
-"loss":Loss.NLL}
+"loss":Loss.NLL,
+"bidirectional": False,
+"wandb_activate": WANDB_ACTIVATE}
 
 training_size = 100
 training_size = min(training_size, len(train))
 
-wandb.init(project="integer-sequence",  config={**my_config, "training_size": training_size})
+if WANDB_ACTIVATE:
+    wandb.init(project="integer-sequence",  config={**my_config, "training_size": training_size})
 
 print("Experiment: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, my_config["batch_size"], my_config["num_epochs"], my_config["dropout_prob"]))
 
@@ -50,6 +56,6 @@ print("MAE on the test set: ", mae_score(pred, y_test[:1000]))
 
 # pred[:25]
 
-
-if wandb.run is not None:
-    wandb.finish()
+if WANDB_ACTIVATE:
+    if wandb.run is not None:
+        wandb.finish()

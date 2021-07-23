@@ -7,7 +7,7 @@ import torch.optim as optim
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -15,9 +15,10 @@ class EncoderRNN(nn.Module):
         self.hidden_size = hidden_size
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
+        self.bidirectional = bidirectional
      
         self.embedding = nn.Embedding(input_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout)
+        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
 
 
 
@@ -44,11 +45,20 @@ class EncoderRNN(nn.Module):
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
-
-        embedded = self.embedding(input)
-        output = embedded
-        output, hidden = self.gru(output, hidden)
         
+        
+        embedded = self.embedding(input) 
+        output = embedded
+        output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
+        
+        if self.bidirectional: 
+            hidden_forward = hidden[-2,:,:]
+            hidden_backward = hidden[-1,:,:]
+            hidden = torch.cat((hidden_forward, hidden_backward), dim = 1)
+        else:
+            hidden = hidden.squeeze(0)
+
+
         # print("===> Encoder Output")
         # print("output " , output.shape)
         # print("hidden ", hidden.shape )
@@ -57,11 +67,13 @@ class EncoderRNN(nn.Module):
 
     def initHidden(self, batch_size = None):
         if batch_size == None : batch_size = self.batch_size
-        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
+
+        if self.bidirectional: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
+        else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1) -> None:
+    def __init__(self, hidden_size: int, output_size: int, embedding_size: int, batch_size: int, num_gru_layers: int = 1, dropout: float = 0.0, seed:int = 1, bidirectional_encoder:bool=False) -> None:
         super(DecoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -70,10 +82,17 @@ class DecoderRNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
 
+        self.bidirectional_encoder = bidirectional_encoder
+
         self.embedding = nn.Embedding(output_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, dropout = dropout, num_layers= num_gru_layers)
         
-        self.out = nn.Linear(hidden_size, output_size)
+        bidirectional_multiplier = 1
+        if self.bidirectional_encoder: 
+            bidirectional_multiplier =2
+
+        self.gru = nn.GRU(embedding_size, hidden_size * bidirectional_multiplier, dropout = dropout, num_layers= num_gru_layers)
+        
+        self.out = nn.Linear(hidden_size * bidirectional_multiplier, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
 
@@ -100,8 +119,8 @@ class DecoderRNN(nn.Module):
         output = F.relu(output)
 
         output, hidden = self.gru(output, hidden)
-
         output = self.softmax(self.out(output[0]))
+   
         output = output.unsqueeze(0)
        
         # print("===> Decoder Output")
@@ -110,10 +129,6 @@ class DecoderRNN(nn.Module):
         # print("<=================")
 
         return output, hidden
-
-    def initHidden(self, batch_size = None):
-        if batch_size == None: batch_size = self.batch_size
-        return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device)
 
 
 

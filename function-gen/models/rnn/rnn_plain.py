@@ -35,10 +35,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, seed:int = 1):
+    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, seed:int = 1, bidirectional:bool=False, wandb_activate:bool=True):
         
         random.seed(seed)
-        
+        self.wandb_activate = wandb_activate
+
         self.symbols = symbols
         self.output_sequence_length = output_sequence_length
         self.encoded_seq_length = encoded_seq_length
@@ -52,11 +53,13 @@ class RNN_Plain(LearningAlgorithm):
         self.output_size = output_size
         self.embedding_size = embedding_size
         self.batch_size = batch_size
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed).to(device)
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
 
-        wandb.watch(self.encoder, log_freq=100)
-        wandb.watch(self.decoder, log_freq=100)
+        
+        if self.wandb_activate: 
+            wandb.watch(self.encoder, log_freq=100)
+            wandb.watch(self.decoder, log_freq=100)
         
         print("Num_batch: ", self.batch_size)
         print(self.encoder)
@@ -172,7 +175,7 @@ class RNN_Plain(LearningAlgorithm):
                 print_loss_avg = print_loss_total / print_every
                 print_loss_total = 0
 
-                wandb.log({'loss': print_loss_avg, 'epoch': i})
+                if self.wandb_activate: wandb.log({'loss': print_loss_avg, 'epoch': i})
                 print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
                                             i, i / self.num_epochs * 100, print_loss_avg))
 
