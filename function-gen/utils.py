@@ -1,4 +1,3 @@
-from sympy import *
 from random import choice
 from typing import List
 import wandb
