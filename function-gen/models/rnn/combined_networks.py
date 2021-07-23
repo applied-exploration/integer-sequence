@@ -67,7 +67,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     # decoder_hidden = decoder.initHidden(encoder_hidden)
     encoder_out = encoder_hidden
-    print("encoder_out ", encoder_hidden.shape)
+
     decoder_hidden = encoder_hidden.unsqueeze(0)
 
 

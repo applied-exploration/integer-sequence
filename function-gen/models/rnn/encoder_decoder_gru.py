@@ -51,7 +51,12 @@ class EncoderRNN(nn.Module):
         output = embedded
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
         
-        if self.bidirectional: hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim = 1)
+        if self.bidirectional: 
+            hidden_forward = hidden[-2,:,:]
+            hidden_backward = hidden[-1,:,:]
+            hidden = torch.cat((hidden_forward, hidden_backward), dim = 1)
+
+
 
         # print("===> Encoder Output")
         # print("output " , output.shape)
@@ -107,7 +112,6 @@ class DecoderRNN(nn.Module):
         # print("hidden ", hidden.shape)
         # print("<================= ")
 
-        
         embedding = self.embedding(input)
         
         output = embedding 
@@ -124,28 +128,6 @@ class DecoderRNN(nn.Module):
         # print("<=================")
 
         return output, hidden
-    
-    def _cat_directions(self, h):
-        """ If the encoder is bidirectional, do the following transformation.
-            (#directions * #layers, #batch, hidden_size) -> (#layers, #batch, #directions * hidden_size)
-        """
-        if self.bidirectional_encoder:
-            h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
-        return h
-
-    def initHidden(self, encoder_hidden):
-        # if batch_size == None : batch_size = self.batch_size
-
-        # if self.bidirectional_encoder: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
-        # else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
-        """ Initialize the encoder hidden state. """
-        if encoder_hidden is None:
-            return None
-        if isinstance(encoder_hidden, tuple):
-            encoder_hidden = tuple([self._cat_directions(h) for h in encoder_hidden])
-        else:
-            encoder_hidden = self._cat_directions(encoder_hidden)
-        return encoder_hidden
 
 
 
