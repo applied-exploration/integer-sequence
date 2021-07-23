@@ -1,28 +1,27 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-import sys
-import os 
-
 import numpy as np
-
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+from lang import LangType
 
 from utils import normalize_0_1, eq_to_seq, is_eq_valid
+from typing import List
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 EOS_token = 0
 SOS_token = 1
 
-
 def indexesFromSentence(lang, sentence):
-    if ',' in sentence: 
-        return [lang.word2index[word] for word in sentence.split(',') if word is not '']
+    # print(lang.type)
+    if lang.type == LangType.Number:
+        if ',' in sentence: 
+            return [int(lang.word2index[word]) for word in sentence.split(',') if word is not '']
+        else:
+            return [int(lang.word2index[word]) for word in list(sentence)]
     else:
-        return [lang.word2index[word] for word in list(sentence)]
-
+        if ',' in sentence: 
+            return [lang.word2index[word] for word in sentence.split(',') if word is not '']
+        else:
+            return [lang.word2index[word] for word in list(sentence)]
 
 
 def tensorFromSentence(lang, sentence):

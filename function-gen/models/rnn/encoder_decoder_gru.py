@@ -6,8 +6,19 @@ import torch.optim as optim
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+def dec2bin(x, bits):
+    mask = 2 ** torch.arange(bits - 1, -1, -1).to(x.device, x.dtype)
+    return x.unsqueeze(-1).bitwise_and(mask).ne(0).float()
+
+
+def bin2dec(b, bits):
+    mask = 2 ** torch.arange(bits - 1, -1, -1).to(b.device, b.dtype)
+    return torch.sum(mask * b, -1)
+
+BINARY_NUM = 32
+
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
@@ -16,10 +27,13 @@ class EncoderRNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_gru_layers
         self.bidirectional = bidirectional
-     
-        self.embedding = nn.Embedding(input_size, embedding_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
 
+        self.binary_encoding = binary_encoding
+
+        self.embedding = nn.Embedding(input_size, embedding_size)
+        if binary_encoding == True:
+            embedding_size = BINARY_NUM 
+        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
 
 
     def forward(self, input, hidden):
@@ -45,9 +59,10 @@ class EncoderRNN(nn.Module):
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
-        
-        
-        embedded = self.embedding(input) 
+        if self.binary_encoding == True:
+            embedded = dec2bin(input, BINARY_NUM)
+        else:
+            embedded = self.embedding(input)
         output = embedded
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
         
