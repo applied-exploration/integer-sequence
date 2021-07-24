@@ -46,6 +46,8 @@ class RNN_Plain(LearningAlgorithm):
                  loss: Loss = Loss.NLL,
                  cnn_output_depth: List[int] = [512],
                  cnn_kernel_size: int = 3,
+                 cnn_batch_norm: bool = True,
+                 cnn_activation: bool = True,
                  seed: int = 1,
                  bidirectional: bool = False,
                  wandb_activate: bool = True,
@@ -69,7 +71,7 @@ class RNN_Plain(LearningAlgorithm):
         self.batch_size = batch_size
 
         self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, cnn_output_depth=cnn_output_depth,
-                                  cnn_kernel_size=cnn_kernel_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding=binary_encoding).to(device)
+                                  cnn_kernel_size=cnn_kernel_size, cnn_batch_norm=cnn_batch_norm, cnn_activation=cnn_activation, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding=binary_encoding).to(device)
         self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size,
                                   num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
 

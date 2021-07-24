@@ -21,35 +21,38 @@ BINARY_NUM = 32
 
 class EncoderRNN(nn.Module):
 
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: List[int] = [512], cnn_kernel_size:int = 3, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: List[int] = [512], cnn_kernel_size:int = 3, cnn_batch_norm:bool=True, cnn_activation:bool=True, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
 
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
-
         self.hidden_size = hidden_size
         self.batch_size = batch_size
         self.num_gru_layers = num_gru_layers
         self.cnn_output_depth = cnn_output_depth
         self.bidirectional = bidirectional
-
         self.binary_encoding = binary_encoding
-  
         self.embedding = nn.Embedding(input_size, embedding_size)
     
         if binary_encoding == True:
             embedding_size = BINARY_NUM
+
+        gru_input = embedding_size
         
-        cnn_list = [nn.Conv1d(i, cnn_output_depth[i+1], kernel_size=cnn_kernel_size, stride=1, padding=1)
-                for i in range(len(cnn_output_depth))]
+        self.cnn = []
 
-        cnn_list.insert(0, nn.Conv1d(embedding_size, cnn_output_depth, kernel_size=cnn_kernel_size, stride=1, padding=1))
+        if len(cnn_output_depth) > 0:
+            cnn_output_depth.insert(0, embedding_size)
+            cnn_list = []
+            for i in range(len(cnn_output_depth)-1):
+                cnn_list.append(nn.Conv1d(cnn_output_depth[i], cnn_output_depth[i+1], kernel_size=cnn_kernel_size, stride=1, padding=1))
+                if cnn_batch_norm: cnn_list.append(nn.BatchNorm1d(cnn_output_depth[i+1]))
+                if cnn_activation: cnn_list.append(nn.ReLU())
 
-        print(cnn_list)
-        self.cnn = nn.ModuleList(cnn_list)
+            self.cnn = nn.ModuleList(cnn_list)
+            gru_input = cnn_output_depth[-1]
 
-        self.batch_norm = nn.BatchNorm1d(cnn_output_depth)
-        self.gru = nn.GRU(cnn_output_depth, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
+        self.gru = nn.GRU(gru_input, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
         
 
 
@@ -87,17 +90,19 @@ class EncoderRNN(nn.Module):
 
         # print("=== ")
         # print("embedded output", embedded.shape)
-        embedded = embedded.transpose(0,1).transpose(1,2)
+        if len(self.cnn)>0:
+            embedded = embedded.transpose(0,1).transpose(1,2)
 
-        output = embedded
-        for i in range(len(self.cnn_output_depth)):
-            output = self.cnn[i](output)
-            # output = self.batch_norm(output)
+            output = embedded
+            for cnn_layer in self.cnn:
+                output = cnn_layer(output)
+                print(cnn_layer)
+                print(output.shape)
 
-        output = output.transpose(0,1).transpose(0,2)
-        # print("CNN output reshaped", output.shape)
+            output = output.transpose(0,1).transpose(0,2)
+        else:        
+            output = embedded
         
-
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
         
         # print("===")
