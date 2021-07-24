@@ -72,7 +72,8 @@ print("Experiment 2, with Binary encoding: Training size: {}, Batch size: {}, Ep
 config_binary_encoding = my_config.copy()
 config_binary_encoding["binary_encoding"] = True
 
-wandb.init(project="integer-sequence",  config={**config_binary_encoding, "training_size": training_size})
+if WANDB_ACTIVATE:
+    wandb.init(project="integer-sequence",  config={**config_binary_encoding, "training_size": training_size})
 
 algo = RNN_Plain(**config_binary_encoding)
 test_algo(algo, input_lang, output_lang, train, X_test, y_test)
@@ -83,7 +84,8 @@ print("Experiment 3, with CNNs: Training size: {}, Batch size: {}, Epochs: {}, D
 config_cnn = my_config.copy()
 config_cnn["cnn_output_depth"] = [256]
 
-wandb.init(project="integer-sequence",  config={**config_cnn, "training_size": training_size})
+if WANDB_ACTIVATE:
+    wandb.init(project="integer-sequence",  config={**config_cnn, "training_size": training_size})
 
 algo = RNN_Plain(**config_cnn)
 test_algo(algo, input_lang, output_lang, train, X_test, y_test)
@@ -95,10 +97,24 @@ print("Experiment 4, Bidirectional ON: Training size: {}, Batch size: {}, Epochs
 config_bidirectional = my_config.copy()
 config_bidirectional["bidirectional"] = True
 
-wandb.init(project="integer-sequence",  config={**config_bidirectional, "training_size": training_size})
+if WANDB_ACTIVATE:
+    wandb.init(project="integer-sequence",  config={**config_bidirectional, "training_size": training_size})
 
 algo = RNN_Plain(**config_bidirectional)
 test_algo(algo, input_lang, output_lang, train, X_test, y_test)
+
+# With Loss.NLL_Multiply_MAE
+print("Experiment 5, with MAE loss: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, my_config["batch_size"], my_config["num_epochs"], my_config["dropout_prob"]))
+
+config_loss = my_config.copy()
+config_loss["loss"] = Loss.NLL_Multiply_MAE
+
+if WANDB_ACTIVATE:
+    wandb.init(project="integer-sequence",  config={**config_loss, "training_size": training_size})
+
+algo = RNN_Plain(**config_loss)
+test_algo(algo, input_lang, output_lang, train, X_test, y_test)
+
 
 if WANDB_ACTIVATE:
     if wandb.run is not None:

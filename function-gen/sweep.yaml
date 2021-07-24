@@ -46,9 +46,12 @@ parameters:
     value: 25000
     distribution: constant
   batch_size:
-    max: 256
-    min: 1
-    distribution: int_uniform
+    values:
+      - 32
+      - 64
+      - 12
+      - 6
+    distribution: categorical
   binary_encoding:
     values:
       - True
@@ -73,8 +76,8 @@ parameters:
       - [64, 64]
     distribution: categorical
   cnn_kernel_size:
-    max: 3
-    min: 0
+    max: 5
+    min: 3
     distribution: int_uniform
   cnn_batch_norm:
     values:
