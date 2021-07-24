@@ -95,7 +95,6 @@ class EncoderRNN(nn.Module):
             output = embedded
             for cnn_layer in self.cnn:
                 output = cnn_layer(output)
-                print(cnn_layer)
                 print(output.shape)
 
             output = output.transpose(0,1).transpose(0,2)
