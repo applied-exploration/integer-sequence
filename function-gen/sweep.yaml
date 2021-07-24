@@ -19,9 +19,8 @@ parameters:
     value: 1
     distribution: constant
   num_gru_layers:
-    max: 2
-    min: 1
-    distribution: int_uniform
+    value: 1
+    distribution: constant
   embedding_size:
     max: 1024
     min: 64
@@ -51,12 +50,12 @@ parameters:
     min: 1
     distribution: int_uniform
   binary_encoding:
-    max: 0
-    min: 1
+    max: 1
+    min: 0
     distribution: int_uniform
   bidirectional:
-    max: 0
-    min: 1
+    max: 1
+    min: 0
     distribution: int_uniform
   cnn_output_depth:
     values:
@@ -71,16 +70,16 @@ parameters:
       - [128, 128]
       - [64, 64]
   cnn_kernel_size:
-    max: 0
-    min: 3
+    max: 3
+    min: 0
     distribution: int_uniform
   cnn_batch_norm:
-    max: 0
-    min: 1
+    max: 1
+    min: 0
     distribution: int_uniform
   cnn_activation:
-    max: 0
-    min: 1
+    max: 1
+    min: 0
     distribution: int_uniform
   symbols:
     values:
