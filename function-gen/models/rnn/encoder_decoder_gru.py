@@ -88,7 +88,6 @@ class EncoderRNN(nn.Module):
             embedded = self.embedding(input)
 
 
-        # print("embedded output", embedded.shape)
         if len(self.cnn)>0:
             embedded = embedded.transpose(0,1).transpose(1,2)
 
