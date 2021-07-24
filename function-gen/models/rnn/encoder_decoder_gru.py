@@ -102,7 +102,6 @@ class EncoderRNN(nn.Module):
         
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
         
-        # print("===")
         
         if self.bidirectional: 
             hidden_forward = hidden[-2,:,:]
