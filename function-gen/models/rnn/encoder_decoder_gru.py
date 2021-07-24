@@ -4,6 +4,8 @@ import torch.nn.functional as F
 
 import torch.optim as optim
 
+from typing import List, Tuple
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def dec2bin(x, bits):
@@ -18,22 +20,40 @@ def bin2dec(b, bits):
 BINARY_NUM = 32
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, num_gru_layers:int = 1, dropout:float = 0.0, seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
+
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: List[int] = [], cnn_kernel_size:int = 3, cnn_batch_norm:bool=False, cnn_activation:bool=False, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
+
         super(EncoderRNN, self).__init__()
         
         self.seed = torch.manual_seed(seed)
-
         self.hidden_size = hidden_size
         self.batch_size = batch_size
-        self.num_layers = num_gru_layers
+        self.num_gru_layers = num_gru_layers
+        self.cnn_output_depth = cnn_output_depth
         self.bidirectional = bidirectional
-
         self.binary_encoding = binary_encoding
-
         self.embedding = nn.Embedding(input_size, embedding_size)
+    
         if binary_encoding == True:
-            embedding_size = BINARY_NUM 
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
+            embedding_size = BINARY_NUM
+
+        gru_input = embedding_size
+        
+        self.cnn = []
+
+        if len(cnn_output_depth) > 0:
+            cnn_output_depth.insert(0, embedding_size)
+            cnn_list = []
+            for i in range(len(cnn_output_depth)-1):
+                cnn_list.append(nn.Conv1d(cnn_output_depth[i], cnn_output_depth[i+1], kernel_size=cnn_kernel_size, stride=1, padding=1))
+                if cnn_batch_norm: cnn_list.append(nn.BatchNorm1d(cnn_output_depth[i+1]))
+                if cnn_activation: cnn_list.append(nn.ReLU())
+
+            self.cnn = nn.ModuleList(cnn_list)
+            gru_input = cnn_output_depth[-1]
+
+        self.gru = nn.GRU(gru_input, hidden_size, num_layers=num_gru_layers, dropout = dropout, bidirectional=self.bidirectional)
+        
 
 
     def forward(self, input, hidden):
@@ -59,12 +79,28 @@ class EncoderRNN(nn.Module):
         # print("input ", input.shape)
         # print("hidden ", hidden.shape)
         # print("<================= ")
+
+        
+        
         if self.binary_encoding == True:
             embedded = dec2bin(input, BINARY_NUM)
         else:
             embedded = self.embedding(input)
-        output = embedded
+
+
+        if len(self.cnn)>0:
+            embedded = embedded.transpose(0,1).transpose(1,2)
+
+            output = embedded
+            for cnn_layer in self.cnn:
+                output = cnn_layer(output)
+
+            output = output.transpose(0,1).transpose(0,2)
+        else:        
+            output = embedded
+        
         output, hidden = self.gru(output, hidden) # output [seq_len, batch size, hid dim * num directions] | hidden [n layers * num directions, batch size, hid dim]
+        
         
         if self.bidirectional: 
             hidden_forward = hidden[-2,:,:]
@@ -83,8 +119,8 @@ class EncoderRNN(nn.Module):
     def initHidden(self, batch_size = None):
         if batch_size == None : batch_size = self.batch_size
 
-        if self.bidirectional: return torch.zeros(2 * self.num_layers, batch_size, self.hidden_size, device=device)
-        else: return torch.zeros(self.num_layers, batch_size, self.hidden_size, device=device) 
+        if self.bidirectional: return torch.zeros(2 * self.num_gru_layers, batch_size, self.hidden_size, device=device)
+        else: return torch.zeros(self.num_gru_layers, batch_size, self.hidden_size, device=device) 
 
 
 class DecoderRNN(nn.Module):
@@ -169,8 +205,7 @@ class AttnDecoderRNN(nn.Module):
         embedded = self.embedding(input).view(1, 1, -1)
         embedded = self.dropout(embedded)
 
-        attn_weights = F.softmax(
-            self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
+        attn_weights = F.softmax(self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
                                  encoder_outputs.unsqueeze(0))
 

@@ -20,8 +20,6 @@ from .rnn_utils import tensorFromSentence
 from utils import timeSince
 from lang import Lang
 
-import wandb
-
 
 # from line_profiler import LineProfiler
 
@@ -32,10 +30,32 @@ SOS_token = 1
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 class RNN_Plain(LearningAlgorithm):
 
-    def __init__(self, symbols: List[str], output_sequence_length: int, encoded_seq_length: int,  num_epochs: int, input_size:int, output_size:int, hidden_size: int = 256, embedding_size:int = 64, batch_size:int = 2, learning_rate: float = 0.01, num_gru_layers: int = 1, dropout_prob: float = 0.0, loss:Loss = Loss.NLL, bidirectional:bool=False, wandb_activate:bool=True, binary_encoding:bool = False, seed:int = 1):
-        
+    def __init__(self,
+                 symbols: List[str],
+                 output_sequence_length: int,
+                 encoded_seq_length: int,
+                 num_epochs: int,
+                 input_size: int,
+                 output_size: int,
+                 hidden_size: int = 256,
+                 embedding_size: int = 64,
+                 batch_size: int = 2,
+                 learning_rate: float = 0.01,
+                 num_gru_layers: int = 1,
+                 dropout_prob: float = 0.0,
+                 loss: Loss = Loss.NLL,
+                 cnn_output_depth: List[int] = [],
+                 cnn_kernel_size: int = 3,
+                 cnn_batch_norm: bool = True,
+                 cnn_activation: bool = True,
+                 seed: int = 1,
+                 bidirectional: bool = False,
+                 wandb_activate: bool = True,
+                 binary_encoding: bool = False):
+
         random.seed(seed)
         self.wandb_activate = wandb_activate
 
@@ -53,18 +73,21 @@ class RNN_Plain(LearningAlgorithm):
         self.embedding_size = embedding_size
         self.batch_size = batch_size
         self.binary_encoding = binary_encoding
-        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding= binary_encoding).to(device)
-        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
-        
+
+        self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, cnn_output_depth=cnn_output_depth,
+                                  cnn_kernel_size=cnn_kernel_size, cnn_batch_norm=cnn_batch_norm, cnn_activation=cnn_activation, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding=binary_encoding).to(device)
+        self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size,
+                                  num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
+
         if self.wandb_activate: 
             wandb.watch(self.encoder, log_freq=100)
             wandb.watch(self.decoder, log_freq=100)
-        
+
         print("Num_batch: ", self.batch_size)
         print(self.encoder)
         print(self.decoder)
 
-    # WITH DATALOADER =>   
+    # WITH DATALOADER =>
     # def convert_data(self, data:List[Tuple[List[int], str]]) -> List[Tuple[str, str]]:
     #     converted_data = []
 
@@ -79,7 +102,7 @@ class RNN_Plain(LearningAlgorithm):
     #     return [tensorFromSentence(lang, data[i])
     #                     for i in range(len(data))]
 
-    def seperate_data(self, data:List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
+    def seperate_data(self, data: List[Tuple[List[int], str]]) -> Tuple[List[str], List[str]]:
         ''' 
         Description: 
             Function that seperates input and target into seperate lists
@@ -105,11 +128,9 @@ class RNN_Plain(LearningAlgorithm):
 
     def create_minibatch(self, data: List[str], lang: Lang, indices:List[int], binary_encoding: bool) -> torch.tensor:
         encoded_dataset = [tensorFromSentence(lang, data[index], binary_encoding) for index in indices]
-        
-        ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
-        return torch.cat(encoded_dataset, dim=1) 
 
-
+        # flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
+        return torch.cat(encoded_dataset, dim=1)
 
     def train(self, input_lang: Lang, output_lang: Lang, data: List[Tuple[List[int], str]]) -> None:
         print_every = max(1, math.floor(self.num_epochs/10))
@@ -117,7 +138,6 @@ class RNN_Plain(LearningAlgorithm):
         ''' For diagnosis'''
         start = time.time()
         print_loss_total = 0  # Reset every print_every
-
 
         ''' Defining Optimization parameters'''
         encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
@@ -134,21 +154,19 @@ class RNN_Plain(LearningAlgorithm):
               shaped [num_batches]. 
               eg.: [2, 5, 15] with num_batch 3. Each number represents a category
         '''
-        criterion = nn.NLLLoss()  
+        criterion = nn.NLLLoss()
 
         ''' Prepare Data '''
         input_data, target_data = self.seperate_data(data)
 
-        # --- with DataLoader --- # 
+        # --- with DataLoader --- #
         # train_dataloader = DataLoader((self.dataset_to_tensor(input_data, input_lang),self.dataset_to_tensor(target_data, output_lang)),
         #      batch_size=self.batch_size, shuffle=True)
         # input_tensor, target_tensor = next(iter(train_dataloader))
 
-        
-
         ''' Feed forward of network & calculating loss'''
         for i in range(1,  self.num_epochs + 1):
-            
+
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             # --- with own minibatching --- #
             randomized_indices = [random.randrange(0, len(data)) for _ in range(0, self.batch_size)]
@@ -157,15 +175,14 @@ class RNN_Plain(LearningAlgorithm):
  
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
-                  
 
             loss = train(
-                input_tensor_minibatch, target_tensor_minibatch, 
-                self.encoder, self.decoder, 
-                encoder_optimizer, decoder_optimizer, 
-                criterion, 
-                input_lang, output_lang, 
-                loss_type = self.loss )
+                input_tensor_minibatch, target_tensor_minibatch,
+                self.encoder, self.decoder,
+                encoder_optimizer, decoder_optimizer,
+                criterion,
+                input_lang, output_lang,
+                loss_type=self.loss)
 
             print_loss_total += loss
 
@@ -174,23 +191,20 @@ class RNN_Plain(LearningAlgorithm):
                 print_loss_avg = print_loss_total / print_every
                 print_loss_total = 0
 
-                if self.wandb_activate: wandb.log({'loss': print_loss_avg, 'epoch': i})
+                if self.wandb_activate:
+                    wandb.log({'loss': print_loss_avg, 'epoch': i})
                 print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
-                                            i, i / self.num_epochs * 100, print_loss_avg))
-
-
+                                             i, i / self.num_epochs * 100, print_loss_avg))
 
     def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
         ''' Prepare data '''
         stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
-        
         input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))), self.binary_encoding)
         output_list = infer(input_tensor_batch, self.encoder, self.decoder, output_lang )
 
         return output_list
-        
+
     def save(self, name: str):
         folder = ""
         torch.save(self.encoder.state_dict(), name + "-encoder.pt")
         torch.save(self.decoder.state_dict(), name + "-decoder.pt")
-

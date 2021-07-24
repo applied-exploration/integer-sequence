@@ -3,6 +3,8 @@ from models.rnn.combined_networks import Loss
 from lang import load_data_int_seq
 from utils import accuracy_score, mae_score
 
+from typing import List, Tuple
+
 import wandb
 
 import os
@@ -41,6 +43,10 @@ my_config ={"symbols": "+*-0123456789t",
 "embedding_size": 256, 
 "batch_size": 32, 
 "num_gru_layers": 1,
+"cnn_output_depth": [],
+"cnn_kernel_size": 3,
+"cnn_batch_norm":False,
+"cnn_activation":False,
 "dropout_prob": 0.,
 "binary_encoding": False,
 "loss":Loss.NLL,
