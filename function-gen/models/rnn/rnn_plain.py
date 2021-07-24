@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 
 from .encoder_decoder_gru import EncoderRNN, DecoderRNN
 from .combined_networks import train, infer, Loss
-from .rnn_utils import tensorFromSentence, calc_magnitude
+from .rnn_utils import tensorFromSentence
 from utils import timeSince
 from lang import Lang
 
@@ -52,9 +52,9 @@ class RNN_Plain(LearningAlgorithm):
         self.output_size = output_size
         self.embedding_size = embedding_size
         self.batch_size = batch_size
+        self.binary_encoding = binary_encoding
         self.encoder = EncoderRNN(self.input_size, self.hidden_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional=bidirectional, binary_encoding= binary_encoding).to(device)
         self.decoder = DecoderRNN(self.hidden_size, self.output_size, self.embedding_size, self.batch_size, num_gru_layers=num_gru_layers, dropout=dropout_prob, seed=seed, bidirectional_encoder=bidirectional).to(device)
-
         
         if self.wandb_activate: 
             wandb.watch(self.encoder, log_freq=100)
@@ -103,8 +103,8 @@ class RNN_Plain(LearningAlgorithm):
 
         return input_data, target_data
 
-    def create_minibatch(self, data: List[str], lang: Lang, indices:List[int]) -> torch.tensor:
-        encoded_dataset = [tensorFromSentence(lang, data[index]) for index in indices]
+    def create_minibatch(self, data: List[str], lang: Lang, indices:List[int], binary_encoding: bool) -> torch.tensor:
+        encoded_dataset = [tensorFromSentence(lang, data[index], binary_encoding) for index in indices]
         
         ## flatten it to a batch tensor, one_column = one batch of sequence, one_row = time step in sequences
         return torch.cat(encoded_dataset, dim=1) 
@@ -152,8 +152,8 @@ class RNN_Plain(LearningAlgorithm):
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             # --- with own minibatching --- #
             randomized_indices = [random.randrange(0, len(data)) for _ in range(0, self.batch_size)]
-            input_tensor_minibatch = self.create_minibatch(input_data, input_lang, randomized_indices)
-            target_tensor_minibatch = self.create_minibatch(target_data, output_lang, randomized_indices)
+            input_tensor_minibatch = self.create_minibatch(input_data, input_lang, randomized_indices, self.binary_encoding)
+            target_tensor_minibatch = self.create_minibatch(target_data, output_lang, randomized_indices, self.binary_encoding)
  
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
@@ -184,7 +184,7 @@ class RNN_Plain(LearningAlgorithm):
         ''' Prepare data '''
         stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
         
-        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))))
+        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))), self.binary_encoding)
         output_list = infer(input_tensor_batch, self.encoder, self.decoder, output_lang )
 
         return output_list
