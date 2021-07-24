@@ -19,7 +19,7 @@ from .combined_networks import train, infer, Loss
 from .rnn_utils import tensorFromSentence
 from utils import timeSince
 from lang import Lang
-
+import wandb
 
 # from line_profiler import LineProfiler
 
