@@ -137,10 +137,8 @@ class RNN_Plain(LearningAlgorithm):
         print_loss_total = 0  # Reset every print_every
 
         ''' Defining Optimization parameters'''
-        encoder_optimizer = optim.SGD(
-            self.encoder.parameters(), lr=self.learning_rate)
-        decoder_optimizer = optim.SGD(
-            self.decoder.parameters(), lr=self.learning_rate)
+        encoder_optimizer = optim.SGD(self.encoder.parameters(), lr=self.learning_rate)
+        decoder_optimizer = optim.SGD(self.decoder.parameters(), lr=self.learning_rate)
 
         ''' 
         NLLLos requires 
@@ -168,12 +166,9 @@ class RNN_Plain(LearningAlgorithm):
 
             ''' Create a minibatch tensor [sequence_len, batch_size]'''
             # --- with own minibatching --- #
-            randomized_indices = [random.randrange(
-                0, len(data)) for _ in range(0, self.batch_size)]
-            input_tensor_minibatch = self.create_minibatch(
-                input_data, input_lang, randomized_indices)
-            target_tensor_minibatch = self.create_minibatch(
-                target_data, output_lang, randomized_indices)
+            randomized_indices = [random.randrange(0, len(data)) for _ in range(0, self.batch_size)]
+            input_tensor_minibatch = self.create_minibatch(input_data, input_lang, randomized_indices)
+            target_tensor_minibatch = self.create_minibatch(target_data, output_lang, randomized_indices)
 
             # --- with DataLoader --- #
             # input_tensor, target_tensor = next(iter(train_dataloader))
@@ -200,13 +195,10 @@ class RNN_Plain(LearningAlgorithm):
 
     def infer(self, input_lang: Lang, output_lang: Lang, data: List[List[int]]) -> List[str]:
         ''' Prepare data '''
-        stringified_inputs = [
-            ''.join(str(x)+',' for x in sequence) for sequence in data]
+        stringified_inputs = [''.join(str(x)+',' for x in sequence) for sequence in data]
 
-        input_tensor_batch = self.create_minibatch(
-            stringified_inputs, input_lang, list(range(0, len(data))))
-        output_list = infer(input_tensor_batch, self.encoder,
-                            self.decoder, output_lang)
+        input_tensor_batch = self.create_minibatch(stringified_inputs, input_lang, list(range(0, len(data))))
+        output_list = infer(input_tensor_batch, self.encoder, self.decoder, output_lang)
 
         return output_list
 
