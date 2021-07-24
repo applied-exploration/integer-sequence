@@ -44,7 +44,7 @@ class RNN_Plain(LearningAlgorithm):
                  num_gru_layers: int = 1,
                  dropout_prob: float = 0.0,
                  loss: Loss = Loss.NLL,
-                 cnn_output_depth: List[int] = [512],
+                 cnn_output_depth: List[int] = [],
                  cnn_kernel_size: int = 3,
                  cnn_batch_norm: bool = True,
                  cnn_activation: bool = True,

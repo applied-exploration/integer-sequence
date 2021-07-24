@@ -21,7 +21,7 @@ BINARY_NUM = 32
 
 class EncoderRNN(nn.Module):
 
-    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: List[int] = [512], cnn_kernel_size:int = 3, cnn_batch_norm:bool=True, cnn_activation:bool=True, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
+    def __init__(self, input_size:int, hidden_size:int, embedding_size:int, batch_size:int, cnn_output_depth: List[int] = [], cnn_kernel_size:int = 3, cnn_batch_norm:bool=True, cnn_activation:bool=True, num_gru_layers:int = 1, dropout:float = 0.0,  seed:int = 1, bidirectional:bool=False, binary_encoding:bool = False) -> None:
 
         super(EncoderRNN, self).__init__()
         
