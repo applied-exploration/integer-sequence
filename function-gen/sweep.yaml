@@ -50,13 +50,15 @@ parameters:
     min: 1
     distribution: int_uniform
   binary_encoding:
-    max: 1
-    min: 0
-    distribution: int_uniform
+    values:
+      - True
+      - False
+    distribution: categorical
   bidirectional:
-    max: 1
-    min: 0
-    distribution: int_uniform
+    values:
+      - True
+      - False
+    distribution: categorical
   cnn_output_depth:
     values:
       - [512]
@@ -69,19 +71,25 @@ parameters:
       - [256, 128]
       - [128, 128]
       - [64, 64]
+    distribution: categorical
   cnn_kernel_size:
     max: 3
     min: 0
     distribution: int_uniform
   cnn_batch_norm:
-    max: 1
-    min: 0
-    distribution: int_uniform
+    values:
+      - True
+      - False
+    distribution: categorical
   cnn_activation:
-    max: 1
-    min: 0
+    values:
+      - True
+      - False
+    distribution: categorical
+  loss:
+    min: 1
+    max: 3
     distribution: int_uniform
   symbols:
-    values:
-      - +*-0123456789t
-    distribution: categorical
+    value: +*-0123456789t
+    distribution: constant

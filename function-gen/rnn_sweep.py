@@ -29,10 +29,16 @@ default_config = dict(
     embedding_size= 256, 
     batch_size= 32, 
     num_gru_layers= 1,
+    cnn_output_depth = [],
+    cnn_kernel_size = 0,
+    cnn_batch_norm = False,
+    cnn_activation = False,
     dropout_prob= 0.,
     loss=Loss.NLL,
     bidirectional = False,
-    seed=1)
+    binary_encoding = False,
+    seed=1
+)
 
 training_size = 100
 training_size = min(training_size, len(train))
