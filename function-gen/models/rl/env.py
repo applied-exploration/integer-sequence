@@ -1,14 +1,13 @@
 
 import gym
-# from random import randrange
-from gym import error, spaces, utils
+from gym import spaces
 from typing import Callable, List, Tuple
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
-from utils import normalize_0_1, eq_to_seq, is_eq_valid
+from utils import flatten
 import random
 
 MAX_PENALTY_MAGNITUDE = 999.0
@@ -116,8 +115,9 @@ class IntegerSequenceEnv(gym.Env):
         self.state = create_initial_state(self.input_lang, self.data, self.output_length)
 
         self.action_space = spaces.Discrete(len(self.syms))
-        self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.state[1]),), dtype= int)))
-
+        # if we ever want to return to tuple state
+        # self.observation_space = spaces.Tuple((spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length,), dtype= int), spaces.Box(low=0, high=self.input_lang.n_words, shape=(len(self.state[1]),), dtype= int)))
+        self.observation_space = spaces.Box(low=-1, high=self.output_lang.n_words, shape=(self.output_length + len(self.state[1]),), dtype= int)
 
 
     def step(self, action):
@@ -130,15 +130,14 @@ class IntegerSequenceEnv(gym.Env):
         if is_state_complete(self.state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
             score = self.evaluate(candidate_eq, self.state[1])
-            print(candidate_eq, self.state[1], score)
-            return (self.state, score, True, {})
+            return (flatten(self.state), score, True, {})
         
-        return (self.state, 0, False, {})
+        return (flatten(self.state), 0, False, {})
  
 
     def reset(self):
         self.state = create_initial_state(self.input_lang, self.data, self.output_length)
-        return self.state
+        return flatten(self.state)
 
     def render(self, mode='human', close=False):
-        return self.state
+        return print(self.state)
