@@ -7,7 +7,7 @@ early_terminate:
   min_iter: 2000
 metric:
   goal: maximize
-  name: accuracy
+  name: accuracy_test
 parameters:
   output_sequence_length:
     value: 9
@@ -15,16 +15,18 @@ parameters:
   encoded_seq_length:
     value: 9
     distribution: constant
-  loss:
-    value: 1
-    distribution: constant
   num_gru_layers:
     value: 1
     distribution: constant
   embedding_size:
-    max: 1024
-    min: 64
-    distribution: int_uniform
+    values:
+      - 2048
+      - 1024
+      - 512
+      - 256
+      - 128
+      - 64
+    distribution: categorical
   training_size:
     value: 1000
     distribution: constant
@@ -32,16 +34,26 @@ parameters:
     value: 1000
     distribution: constant
   dropout_prob:
-    max: 0.5
-    min: 0.0
-    distribution: uniform
+    values:
+      - 0.6
+      - 0.5
+      - 0.4
+      - 0.3
+      - 0.2
+      - 0.1
+    distribution: categorical
   output_size:
     value: 16
     distribution: constant
   hidden_size:
-    max: 2048
-    min: 64
-    distribution: int_uniform
+    values:
+      - 2048
+      - 1024
+      - 512
+      - 256
+      - 128
+      - 64
+    distribution: categorical
   num_epochs:
     value: 25000
     distribution: constant
