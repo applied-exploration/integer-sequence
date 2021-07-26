@@ -192,7 +192,10 @@ class RNN_Plain(LearningAlgorithm):
                 print_loss_total = 0
 
                 if self.wandb_activate:
-                    wandb.log({'loss': print_loss_avg, 'epoch': i})
+                    epoch = i
+                    if self.batch != None:
+                        epoch = i + (self.batch * 1000)
+                    wandb.log({'loss': print_loss_avg, 'epoch': epoch})
                 print('%s (%d %d%%) %.4f' % (timeSince(start, i / self.num_epochs),
                                              i, i / self.num_epochs * 100, print_loss_avg))
 

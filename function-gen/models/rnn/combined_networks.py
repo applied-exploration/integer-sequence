@@ -27,7 +27,8 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
     sampled_test_X = test_data_X[:1000]
     sampled_test_y = test_data_y[:1000]
 
-    for _ in range(0, num_batches):
+    for batch in range(0, num_batches):
+        algo.batch = batch
         algo.train(input_lang, output_lang, training_data)
         pred_test = algo.infer(input_lang, output_lang, sampled_test_X)
         accuracy_test = accuracy_score(pred_test, sampled_test_y)
@@ -35,8 +36,8 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
         print("Accuracy score on test set: ", accuracy_test)
         print("Mean Absolute Error  on test set: ", mae_test)
         wandb.log({
-            'accuracy': accuracy_test,
-            'mae': mae_test
+            'accuracy_test': accuracy_test,
+            'mae_test': mae_test
         })
 
 

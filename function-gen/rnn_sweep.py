@@ -65,7 +65,7 @@ wandb.log({'accuracy_train': accuracy_score(pred, [i[1] for i in train])})
 
 ''' 7. Calculate accuracy from the whole test set '''
 pred = algo.infer(input_lang, output_lang, X_test)
-wandb.log({'accuracy_full': accuracy_score(pred, y_test)})
+wandb.log({'accuracy_test_full': accuracy_score(pred, y_test)})
 
 
 if wandb.run is not None:
