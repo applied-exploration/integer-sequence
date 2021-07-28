@@ -1,6 +1,9 @@
 from random import choice
 from typing import List
 import wandb
+import torch
+from eval import PytorchEval
+
 
 def flatten(list_of_lists):
     return [item for sublist in list_of_lists for item in sublist]
@@ -59,6 +62,17 @@ def eq_to_seq(eq: str, length: int) -> List[int]:
         except:
             pass
     if len(int_seq) != length: return [0] * length
+    return int_seq
+
+p_eval = PytorchEval()
+
+def eq_to_seq_tensor(eq: str, length: int) -> List[torch.tensor]:
+    int_seq: List[torch.tensor] = []
+    for i in range(0, length):
+        try:
+            int_seq.append(p_eval.eval(eq.replace('t', str(i+1))))
+        except:
+            pass
     return int_seq
 
 syms = list('+*-0123456789t')
@@ -133,6 +147,10 @@ def timeSince(since, percent):
 def normalize_0_1(a: np.ndarray) -> np.ndarray:
     # Normalised [0,1]
     return (a - np.min(a))/np.ptp(a)
+
+def normalize_0_1_tensor(a: torch.tensor) -> torch.tensor:
+    # Normalised [0,1]
+    return (a - torch.min(a))/torch.max(a)
 
 def normalize_1_255(a: np.ndarray) -> np.ndarray:
     # Normalised [0,255] as integer: don't forget the parenthesis before astype(int)

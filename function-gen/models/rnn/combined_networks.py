@@ -41,11 +41,12 @@ def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, t
         })
 
 
+
 class Loss(Enum):
     NLL = 1
     NLL_Plus_MAE = 2
     NLL_Multiply_MAE = 3
-
+    MAE = 4
 
 def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, input_lang, output_lang, with_attention = False, loss_type: Loss = Loss.NLL, max_length=MAX_LENGTH, seed = 1):
 
@@ -65,7 +66,6 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     
     ''' DECODER '''
     decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
-
     decoder_hidden = encoder_hidden.unsqueeze(0)
 
 
@@ -113,6 +113,10 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
         elif loss_type == Loss.NLL_Multiply_MAE:
             magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 9) for i in range(0, batch_size_inferred)]
             loss = loss * (sum(magnitudes) / len(magnitudes))
+        
+        elif loss_type == Loss.MAE:
+            magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 19) for i in range(0, batch_size_inferred)]
+            loss = torch.mean(magnitudes)
 
     loss.backward()
 
