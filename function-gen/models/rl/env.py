@@ -7,8 +7,11 @@ import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from lang import Lang
-from utils import flatten
+from utils import flatten, eq_to_seq, is_eq_valid, normalize_0_1
+
 import random
+import numpy as np
+
 
 MAX_PENALTY_MAGNITUDE = 999.0
 
@@ -110,7 +113,7 @@ class IntegerSequenceEnv(gym.Env):
         self.output_length = env_config["output_length"]
         self.input_lang = env_config["input_lang"]
         self.output_lang = env_config["output_lang"]
-        self.evaluate = env_config["evaluate"]
+        self.evaluate = evaluate_candidate_eq#env_config["evaluate"]
         self.data = env_config["data"]
         self.state = create_initial_state(self.input_lang, self.data, self.output_length)
 
@@ -124,7 +127,7 @@ class IntegerSequenceEnv(gym.Env):
         # offset action by 2, because we don't need SOS and EOS tokens here
         action = action + 2
         if not is_action_valid(self.state, action, self.output_lang):
-            return (insert_action_in_state((self.state[0].copy(), self.state[1]), action), -MAX_PENALTY_MAGNITUDE, True, {})
+            return (flatten(insert_action_in_state((self.state[0].copy(), self.state[1]), action)), -MAX_PENALTY_MAGNITUDE, True, {})
 
         self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action)
         if is_state_complete(self.state):
@@ -135,9 +138,47 @@ class IntegerSequenceEnv(gym.Env):
         return (flatten(self.state), 0, False, {})
  
 
+    # def reset(self):
+    #     self.state = create_initial_state(self.input_lang, self.data, self.output_length)
+    #     return flatten(self.state)
     def reset(self):
         self.state = create_initial_state(self.input_lang, self.data, self.output_length)
-        return flatten(self.state)
+        return (flatten(self.state), 0, False, {})
 
     def render(self, mode='human', close=False):
         return print(self.state)
+
+
+def evaluate_candidate_eq(candidate: str, int_seq: List[int]) -> float:
+    if is_eq_valid(candidate) == False:
+        return -MAX_PENALTY_MAGNITUDE
+
+    output_sequence = eq_to_seq(candidate, 9)
+
+    if np.count_nonzero(output_sequence) < 1:
+        return -MAX_PENALTY_MAGNITUDE
+
+    return compare_sequences(output_sequence, int_seq)
+
+def compare_sequences(output_sequence: List[int], target_sequence: List[int]) -> float:
+
+    if len(output_sequence) != len(target_sequence):
+        raise AssertionError("sequence size don't match: " + ','.join(str(e) for e in output_sequence)
+ + " | " + ','.join(str(e) for e in target_sequence))
+
+    magnitude: float = 0.0
+
+    combined_seq = np.vstack([output_sequence, target_sequence]) 
+    norm_comb_seq = normalize_0_1(combined_seq)
+
+    norm_output_seq = norm_comb_seq[0]
+    norm_target_seq = norm_comb_seq[1]
+
+    
+    for x, y in zip(norm_target_seq, norm_output_seq):
+        magnitude += abs(x - y)#**2
+
+    # magnitude /= len(norm_target_seq)
+
+    return 10 - (magnitude * 100)
+

@@ -6,7 +6,7 @@ AlphaGo Zero paper (https://www.nature.com/articles/nature24270).
 """
 import random as rd
 import numpy as np
-from MCTS_node import MCTSNode
+from .MCTS_node import MCTSNode
 
 
 # Number of steps into the episode after which we always select the
