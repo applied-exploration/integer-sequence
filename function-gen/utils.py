@@ -8,11 +8,11 @@ def flatten(list_of_lists):
 def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
         if prev in ['1','2','3','4','5','6','7','8','9','0']:
-            return choice(['+', '-', '*'])
-        elif prev in ['s', '+', '-', '*']:
+            return choice(['+', '-', '*', '^'])
+        elif prev in ['s', '+', '-', '*', '^']:
             return choice(['1','2','3','4','5','6','7','8','9','0', 't', 't', 't', 't'])
         elif prev in ['t']:
-            return choice(['+', '-', '*'])
+            return choice(['+', '-', '*', '^'])
         else:
             raise ValueError('Unexpected prev character')
 
@@ -30,16 +30,18 @@ def generate_random_eq_valid(length: int) -> str:
     return eq
 
 
+
+
 def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
+    if list(eq).count("+") >= 2 or list(eq).count("-") >= 2 or list(eq).count("*") >= 2 or list(eq).count("^") >= 2:
+        return False
+    
+    eq = eq.replace('^', '**')
     try:
         # if "t" not in eq:
         #     return False
         results = [eval(eq.replace('t', str(num))) for num in test_set]
         if len(set(results)) == 1:
-            return False
-        elif zoo in results:
-            return False
-        elif nan in results:
             return False
         else:
             return True
@@ -48,6 +50,7 @@ def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
 
 
 def eq_to_seq(eq: str, length: int) -> List[int]:
+    eq = eq.replace('^', '**')
     int_seq: List[int] = []
     for i in range(0, length):
         try:

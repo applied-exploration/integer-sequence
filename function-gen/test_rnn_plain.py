@@ -35,7 +35,7 @@ output_lang, input_lang, train, X_test, y_test = load_data_int_seq()
 
 my_config ={"symbols": "+*-0123456789t", 
 "output_sequence_length": 9, 
-"encoded_seq_length": 9, 
+"encoded_seq_length": 5, 
 "num_epochs": 2500, 
 "input_size": input_lang.n_words, 
 "hidden_size": 256, 
@@ -64,7 +64,6 @@ print("Experiment 1, with Embedding layer: Training size: {}, Batch size: {}, Ep
 
 algo = RNN_Plain(**my_config)
 test_algo(algo, input_lang, output_lang, train, X_test, y_test)
-
 
 # With Binary encoding layer
 print("Experiment 2, with Binary encoding: Training size: {}, Batch size: {}, Epochs: {}, Dropout: {}".format(training_size, my_config["batch_size"], my_config["num_epochs"], my_config["dropout_prob"]))
