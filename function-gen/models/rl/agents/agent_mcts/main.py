@@ -22,6 +22,8 @@ from .replay_memory import ReplayMemory
 # from models.rl.env import IntegerSequenceEnv
 from .mcts import execute_episode
 
+from utils import flatten
+
 import os    
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -49,7 +51,7 @@ def train_mcts(env):
     # if __name__ == '__main__':
         n_actions = env.action_space.n
         n_obs = env.observation_space.shape[0]
-
+ 
         trainer = Trainer(lambda: HillClimbingPolicy(n_obs, 20, n_actions))
         network = trainer.step_model
 
@@ -68,7 +70,7 @@ def train_mcts(env):
             step_idx = 0
             while not done:
                 log(test_env, iteration, step_idx, total_rew)
-                p, _ = network.step(np.array([state]))
+                p, _ = network.step(np.array([flatten(state)]).astype(np.float32))
                 # print(p)
                 action = np.argmax(p)
                 state, reward, done, _ = test_env.step(action)

@@ -8,6 +8,7 @@ import math
 import random as rd
 import collections
 import numpy as np
+from utils import flatten
 
 # Exploration constant
 c_PUCT = 1.38
@@ -44,7 +45,7 @@ class MCTSNode:
     environment state.
     """
 
-    def __init__(self, state, n_actions, TreeEnv, action=None, parent=None, terminal=False):
+    def __init__(self, state, n_actions, TreeEnv, action=None, parent=None, terminal=False, reward=0):
         """
         :param state: State that the node should hold.
         :param n_actions: Number of actions that can be performed in each
@@ -74,6 +75,8 @@ class MCTSNode:
         self.original_prior = np.zeros([n_actions], dtype=np.float32)
         self.child_prior = np.zeros([n_actions], dtype=np.float32)
         self.children = {}
+
+        self.reward = reward
 
     @property
     def N(self):
@@ -153,11 +156,11 @@ class MCTSNode:
         """
         if action not in self.children:
             # Obtain state following given action.
-            new_state, terminal = self.TreeEnv.next_state(self.state, action)
+            new_state, reward, terminal, _ = self.TreeEnv.next_state(self.state, action)
             self.children[action] = MCTSNode(new_state, self.n_actions,
                                              self.TreeEnv,
                                              terminal=terminal,
-                                             action=action, parent=self)
+                                             action=action, parent=self, reward=reward)
         return self.children[action]
 
     def add_virtual_loss(self, up_to):
@@ -236,7 +239,7 @@ class MCTSNode:
         self.parent.backup_value(value, up_to)
 
     def is_done(self):
-        return self.TreeEnv.is_done_state(self.state, self.depth)
+        return self.TreeEnv.is_done_state(flatten(self.state), self.depth)
 
     def inject_noise(self):
         dirch = np.random.dirichlet([D_NOISE_ALPHA] * self.n_actions)
@@ -257,7 +260,7 @@ class MCTSNode:
     def print_tree(self, level=0):
         node_string = "\033[94m|" + "----"*level
         node_string += "Node: action={}\033[0m".format(self.action)
-        node_string += "\n• state:\n{}".format(self.state)
+        node_string += "\n• state:\n{}".format(flatten(self.state))
         node_string += "\n• N={}".format(self.N)
         node_string += "\n• score:\n{}".format(self.child_action_score)
         node_string += "\n• Q:\n{}".format(self.child_Q)

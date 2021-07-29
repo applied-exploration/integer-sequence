@@ -8,6 +8,8 @@ import random as rd
 import numpy as np
 from .MCTS_node import MCTSNode
 
+from utils import flatten
+
 
 # Number of steps into the episode after which we always select the
 # action with highest action probability rather than selecting randomly
@@ -85,8 +87,8 @@ class MCTS:
             # If we encounter done-state, we do not need the agent network to
             # bootstrap. We can backup the value right away.
             if leaf.terminal:#is_done():
-                value = self.TreeEnv.get_return(leaf.state, leaf.depth)
-                leaf.backup_value(value, up_to=self.root)
+                # value = self.TreeEnv.get_return(leaf.state, leaf.depth)
+                leaf.backup_value(leaf.reward, up_to=self.root)
                 continue
             # Otherwise, discourage other threads to take the same trajectory
             # via virtual loss and enqueue the leaf for evaluation by agent
@@ -96,7 +98,7 @@ class MCTS:
         # Evaluate the leaf-states all at once and backup the value estimates.
         if leaves:
             action_probs, values = self.agent_netw.step(
-                self.TreeEnv.get_obs_for_states([leaf.state for leaf in leaves]))
+                self.TreeEnv.get_obs_for_states(np.array([flatten(leaf.state) for leaf in leaves])).astype(np.float32))
             for leaf, action_prob, value in zip(leaves, action_probs, values):
                 leaf.revert_virtual_loss(up_to=self.root)
                 leaf.incorporate_estimates(action_prob, value, up_to=self.root)
@@ -123,14 +125,15 @@ class MCTS:
         :param action: Action to take for the root state.
         """
         # Store data to be used as experience tuples.
-        ob = self.TreeEnv.get_obs_for_states([self.root.state])
+        ob = self.TreeEnv.get_obs_for_states(flatten(self.root.state))
+        print("ob")
+        print(ob)
+
         self.obs.append(ob)
         self.searches_pi.append(
             self.root.visits_as_probs()) # TODO: Use self.root.position.n < self.temp_threshold as argument
         self.qs.append(self.root.Q)
-        reward = (self.TreeEnv.get_return(self.root.children[action].state,
-                                          self.root.children[action].depth)
-                  - sum(self.rewards))
+        reward = self.root.children[action].reward#(self.TreeEnv.get_return(self.root.children[action].state, self.root.children[action].depth)- sum(self.rewards))
         self.rewards.append(reward)
 
         # Resulting state becomes new root of the tree.
@@ -160,8 +163,16 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
     # Must run this once at the start, so that noise injection actually affects
     # the first action of the episode.
     first_node = mcts.root.select_leaf()
-    probs, vals = agent_netw.step(
-        TreeEnv.get_obs_for_states([first_node.state]))
+
+    flattened_state = flatten(first_node.state)
+    # print(flattened_state)
+    converted_state = np.array(flattened_state).astype(np.float32)
+    # print(converted_state)
+    observations_for_states = TreeEnv.get_obs_for_states(converted_state)
+    # print("observations_for_states")
+    # print(np.array([observations_for_states]))
+    
+    probs, vals = agent_netw.step(np.array([observations_for_states]))
     first_node.incorporate_estimates(probs[0], vals[0], first_node)
 
     while True:
@@ -184,10 +195,24 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
 
     # Computes the returns at each step from the list of rewards obtained at
     # each step. The return is the sum of rewards obtained *after* the step.
-    ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
-           in range(len(mcts.rewards))]
+    # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
+    #        in range(len(mcts.rewards))]
+    ret = np.cumsum(mcts.rewards[::-1])[::-1]
+    print("ret")
+    print(ret)
+
+
+        
 
     total_rew = np.sum(mcts.rewards)
-
     obs = np.concatenate(mcts.obs)
+    # obs = mcts.obs
+    
+    print("OBS")
+    print(mcts.obs)
+    print(obs.shape)
+    print(mcts.searches_pi)
+    print(ret.shape)
+    print(total_rew.shape)
+
     return (obs, mcts.searches_pi, ret, total_rew, mcts.root.state)

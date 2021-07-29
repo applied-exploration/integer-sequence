@@ -23,11 +23,26 @@ class HillClimbingPolicy(nn.Module):
         self.dense_v = nn.Linear(n_hidden, 1)
 
     def forward(self, obs):
-        obs_one_hot = torch.zeros((obs.shape[0], self.n_obs))
-        obs_one_hot[np.arange(obs.shape[0]), obs.numpy()] = 1.0
-        h_relu = F.relu(self.dense1(obs_one_hot))
+        # print("policy forward")
+        # print(obs.shape[0])
+        # print(self.n_obs)
+        # print("obs")
+        # print(obs)
+
+        # obs_one_hot = torch.zeros((obs.shape[0], self.n_obs))
+        # print("obs_one_hot")
+        # print(obs_one_hot)
+        # obs_one_hot[np.arange(obs.shape[0]), obs.numpy()] = 1.0
+        # print(obs_one_hot)
+        # h_relu = F.relu(self.dense1(obs_one_hot))
+
+        # print(obs.shape)
+        h_relu = F.relu(self.dense1(obs))
+        # print(h_relu.shape)
         logits = self.dense_p(h_relu)
+        # print(logits.shape)
         policy = F.softmax(logits, dim=1)
+        # print(policy.shape)
 
         value = self.dense_v(h_relu).view(-1)
 
