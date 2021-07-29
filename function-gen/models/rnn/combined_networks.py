@@ -17,7 +17,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 teacher_forcing_ratio = 0.5
 EOS_token = 0
 SOS_token = 1
-MAX_LENGTH = 10
+MAX_LENGTH = 6
 
 ''' Trains the LearningAlgorithm and reports every 1000 epoch'''
 def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, training_data: List[Tuple[List[int], str]], test_data_X: List[List[int]], test_data_y: List[str], num_epochs: int) -> None:
