@@ -48,8 +48,10 @@ class MCTS:
         self.root = None
 
     def initialize_search(self, state=None):
-        init_state = self.TreeEnv.initial_state()
-        n_actions = self.TreeEnv.n_actions
+        # init_state = self.TreeEnv.initial_state()
+        # n_actions = self.TreeEnv.n_actions
+        init_state = self.TreeEnv.reset()[0]
+        n_actions = self.TreeEnv.action_space.n
         self.root = MCTSNode(init_state, n_actions, self.TreeEnv)
         # Number of steps into the episode after which we always select the
         # action with highest action probability rather than selecting randomly
@@ -82,7 +84,7 @@ class MCTS:
             leaf = self.root.select_leaf()
             # If we encounter done-state, we do not need the agent network to
             # bootstrap. We can backup the value right away.
-            if leaf.is_done():
+            if leaf.terminal:#is_done():
                 value = self.TreeEnv.get_return(leaf.state, leaf.depth)
                 leaf.backup_value(value, up_to=self.root)
                 continue
@@ -177,7 +179,7 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
         action = mcts.pick_action()
         mcts.take_action(action)
 
-        if mcts.root.is_done():
+        if mcts.root.terminal:#is_done():
             break
 
     # Computes the returns at each step from the list of rewards obtained at

@@ -63,10 +63,14 @@ def decode_with_lang(lang: Lang, input):
 def create_initial_state(input_lang: Lang, data: List[List[int]], output_length: int) -> TreeState:
     int_seq = random.choice(data)[0]
     seq = encode_with_lang(input_lang, [str(i) for i in int_seq])
-    return ([-1] * output_length, seq)
+
+    unflattened = ([-1] * output_length, seq)
+    flattened = flatten(([-1] * output_length, seq))
+    return unflattened, flattened
 
 
 def get_current_position(state: TreeState) -> int:
+    print(state)
     index = index_of_first(state[0], lambda x: x == -1)
     if index is None: return 0
     return index
@@ -115,7 +119,7 @@ class IntegerSequenceEnv(gym.Env):
         self.output_lang = env_config["output_lang"]
         self.evaluate = evaluate_candidate_eq#env_config["evaluate"]
         self.data = env_config["data"]
-        self.state = create_initial_state(self.input_lang, self.data, self.output_length)
+        self.state, self.unflattened_state = create_initial_state(self.input_lang, self.data, self.output_length)
 
         self.action_space = spaces.Discrete(len(self.syms))
         # if we ever want to return to tuple state
@@ -126,27 +130,63 @@ class IntegerSequenceEnv(gym.Env):
     def step(self, action):
         # offset action by 2, because we don't need SOS and EOS tokens here
         action = action + 2
-        if not is_action_valid(self.state, action, self.output_lang):
-            return (flatten(insert_action_in_state((self.state[0].copy(), self.state[1]), action)), -MAX_PENALTY_MAGNITUDE, True, {})
-
-        self.state = insert_action_in_state((self.state[0].copy(), self.state[1]), action)
-        if is_state_complete(self.state):
-            candidate_eq = ''.join(decode_with_lang(self.output_lang, self.state[0]))
-            score = self.evaluate(candidate_eq, self.state[1])
-            return (flatten(self.state), score, True, {})
         
-        return (flatten(self.state), 0, False, {})
+        self.unflattened_state = insert_action_in_state((self.state[0].copy(), self.state[1]), action)
+        self.state = flatten(self.unflattened_state)
+
+        if not is_action_valid(self.unflattened_state, action, self.output_lang):
+            return (self.state, -MAX_PENALTY_MAGNITUDE, True, {})
+
+        if is_state_complete(self.unflattened_state):
+            candidate_eq = ''.join(decode_with_lang(self.output_lang, self.unflattened_state[0]))
+            score = self.evaluate(candidate_eq, self.unflattened_state[1])
+            return (self.state, score, True, {})
+        
+        return (self.state, 0, False, {})
  
 
     # def reset(self):
     #     self.state = create_initial_state(self.input_lang, self.data, self.output_length)
     #     return flatten(self.state)
     def reset(self):
-        self.state = create_initial_state(self.input_lang, self.data, self.output_length)
-        return (flatten(self.state), 0, False, {})
+        self.state, self.unflattened_state = create_initial_state(self.input_lang, self.data, self.output_length)
+        return (self.state, 0, False, {})
 
     def render(self, mode='human', close=False):
         return print(self.state)
+
+    @staticmethod
+    def get_obs_for_states(states):
+        return np.array(states)
+
+    # @staticmethod
+    def next_state(self, state, action, shape=(7, 7)):
+        print(" -> ", state)
+        action = action + 2
+        if not is_action_valid(state, action, self.output_lang):
+            return (insert_action_in_state((state[0].copy(), state[1]), action), True)
+
+        state = insert_action_in_state((state[0].copy(), state[1]), action)
+        if is_state_complete(state):
+            candidate_eq = ''.join(decode_with_lang(self.output_lang, state[0]))
+            score = self.evaluate(candidate_eq, state[1])
+            return (state, True)
+        
+        return (state, False)
+        # return pos[0] * shape[0] + pos[1]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def evaluate_candidate_eq(candidate: str, int_seq: List[int]) -> float:

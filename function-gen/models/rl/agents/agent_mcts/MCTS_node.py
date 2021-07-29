@@ -44,7 +44,7 @@ class MCTSNode:
     environment state.
     """
 
-    def __init__(self, state, n_actions, TreeEnv, action=None, parent=None):
+    def __init__(self, state, n_actions, TreeEnv, action=None, parent=None, terminal=False):
         """
         :param state: State that the node should hold.
         :param n_actions: Number of actions that can be performed in each
@@ -64,6 +64,7 @@ class MCTSNode:
         self.parent = parent
         self.action = action
         self.state = state
+        self.terminal = terminal
         self.n_actions = n_actions
         self.is_expanded = False
         self.n_vlosses = 0  # Number of virtual losses on this node
@@ -152,9 +153,10 @@ class MCTSNode:
         """
         if action not in self.children:
             # Obtain state following given action.
-            new_state = self.TreeEnv.next_state(self.state, action)
+            new_state, terminal = self.TreeEnv.next_state(self.state, action)
             self.children[action] = MCTSNode(new_state, self.n_actions,
                                              self.TreeEnv,
+                                             terminal=terminal,
                                              action=action, parent=self)
         return self.children[action]
 

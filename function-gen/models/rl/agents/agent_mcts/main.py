@@ -47,8 +47,8 @@ def train_mcts(env):
     # env = IntegerSequenceEnv({"data": train, "output_length": 9, "input_lang": input_lang, "output_lang": output_lang})
     # env = HillClimbingEnv()
     # if __name__ == '__main__':
-        n_actions = 4
-        n_obs = 49
+        n_actions = env.action_space.n
+        n_obs = env.observation_space.shape[0]
 
         trainer = Trainer(lambda: HillClimbingPolicy(n_obs, 20, n_actions))
         network = trainer.step_model
