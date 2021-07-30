@@ -59,11 +59,12 @@ def compare_sequences(output_sequence: np.ndarray, target_sequence: np.ndarray) 
 
 def compare_sequences_tensor(output_sequence: torch.tensor, target_sequence: torch.tensor) -> torch.tensor:
 
+    output_sequence_length = output_sequence.size(0)
     combined_seq = torch.cat([output_sequence, target_sequence]) 
     norm_comb_seq = normalize_0_1_tensor(combined_seq)
-
-    norm_output_seq = norm_comb_seq[0]
-    norm_target_seq = norm_comb_seq[1]
+    
+    norm_output_seq = norm_comb_seq[:output_sequence_length]
+    norm_target_seq = norm_comb_seq[output_sequence_length:]
 
     mae_loss = nn.L1Loss()
 
@@ -96,11 +97,11 @@ def calc_magnitude(decoder_outputs, target_outputs, output_lang, max_penalty: fl
     output_sequence = eq_to_seq_tensor(stringified_output, 9)
 
 
-    if np.count_nonzero(output_sequence) < 1:
-        return max_penalty_magnitude
-    else:
-        stringified_target = ''.join(decoded_target_symbols[:-1])
-        target_sequence = eq_to_seq_tensor(stringified_target, 9)
+    # if np.count_nonzero(output_sequence) < 1:
+    #     return max_penalty_magnitude
+    # else:
+    stringified_target = ''.join(decoded_target_symbols[:-1])
+    target_sequence = eq_to_seq_tensor(stringified_target, 9)
 
     return compare_sequences_tensor(output_sequence, target_sequence)
 

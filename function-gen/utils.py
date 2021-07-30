@@ -66,14 +66,17 @@ def eq_to_seq(eq: str, length: int) -> List[int]:
 
 p_eval = PytorchEval()
 
+
 def eq_to_seq_tensor(eq: str, length: int) -> List[torch.tensor]:
-    int_seq: List[torch.tensor] = []
+    int_seq: List[int] = []
     for i in range(0, length):
         try:
-            int_seq.append(p_eval.eval(eq.replace('t', str(i+1))))
+            res = p_eval.eval(eq.replace('t', str(i+1)))
+            int_seq.append(res)
         except:
             pass
-    return int_seq
+    return torch.tensor(int_seq, requires_grad=True)
+
 
 syms = list('+*-0123456789t')
 # char to index and index to char maps

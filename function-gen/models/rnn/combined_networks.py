@@ -111,8 +111,11 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             loss = loss + (sum(magnitudes) / len(magnitudes))
 
         elif loss_type == Loss.NLL_Multiply_MAE:
-            magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 9) for i in range(0, batch_size_inferred)]
-            loss = loss * (sum(magnitudes) / len(magnitudes))
+            magnitudes = torch.empty((1),requires_grad=True)
+            for i in range(0, batch_size_inferred):
+                magnitudes = torch.cat((magnitudes, calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 19).unsqueeze(0)), dim=0)
+            # magnitudes = [calc_magnitude(sliced_decoder_outputs[i], target_tensor[:,i].unsqueeze(1), output_lang, 9) for i in range(0, batch_size_inferred)]
+            loss = loss * torch.mean(magnitudes)
         
         elif loss_type == Loss.MAE:
             magnitudes = torch.empty((1),requires_grad=True)
