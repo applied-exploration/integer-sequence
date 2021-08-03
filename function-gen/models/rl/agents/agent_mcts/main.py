@@ -84,14 +84,18 @@ def train_mcts(env):
         for i in range(1000):
             if i % 50 == 0:
                 test_agent(i)
-                plt.plot(value_losses, label="value loss")
-                plt.plot(policy_losses, label="policy loss")
-                plt.legend()
-                plt.show()
+                # plt.plot(value_losses, label="value loss")
+                # plt.plot(policy_losses, label="policy loss")
+                # plt.legend()
+                # plt.show()
 
             obs, pis, returns, total_reward, done_state = execute_episode(network,
                                                                     32,
                                                                     env)
+
+            print(i)
+            print(obs)    
+            print(pis)                                                      
             mem.add_all({"ob": obs, "pi": pis, "return": returns})
 
             batch = mem.get_minibatch()

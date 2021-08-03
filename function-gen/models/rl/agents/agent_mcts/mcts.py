@@ -198,21 +198,21 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
     # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
     #        in range(len(mcts.rewards))]
     ret = np.cumsum(mcts.rewards[::-1])[::-1]
-    print("ret")
-    print(ret)
+    # print("ret")
+    # print(ret)
 
 
         
 
     total_rew = np.sum(mcts.rewards)
-    obs = np.concatenate(mcts.obs)
-    # obs = mcts.obs
+    # obs = np.concatenate(mcts.obs)
+    obs = mcts.obs
     
-    print("OBS")
-    print(mcts.obs)
-    print(obs.shape)
-    print(mcts.searches_pi)
-    print(ret.shape)
-    print(total_rew.shape)
+    # print("OBS")
+    # print(mcts.obs)
+    # print(obs.shape)
+    # print(mcts.searches_pi)
+    # print(ret.shape)
+    # print(total_rew.shape)
 
     return (obs, mcts.searches_pi, ret, total_rew, mcts.root.state)
