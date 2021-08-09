@@ -17,7 +17,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 teacher_forcing_ratio = 0.5
 EOS_token = 0
 SOS_token = 1
-MAX_LENGTH = 10
+MAX_LENGTH = 6
 
 ''' Trains the LearningAlgorithm and reports every 1000 epoch'''
 def train_report(algo: LearningAlgorithm, input_lang: Lang, output_lang: Lang, training_data: List[Tuple[List[int], str]], test_data_X: List[List[int]], test_data_y: List[str], num_epochs: int) -> None:
@@ -122,14 +122,13 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     return loss.item() / target_length
 
 def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
-    max_length=  10
     output_list = []
 
     input_length = input_tensor.size(0)
     batch_size_inferred = input_tensor.shape[1]
 
     decoded_words = []
-    decoder_attentions = torch.zeros(max_length, max_length)
+    decoder_attentions = torch.zeros(MAX_LENGTH, MAX_LENGTH)
 
     with torch.no_grad():
 
@@ -142,7 +141,7 @@ def infer(input_tensor, encoder, decoder, output_lang, with_attention = False):
         decoder_input = torch.tensor([[SOS_token for _ in range(batch_size_inferred)]], device=device)
         decoder_hidden = encoder_hidden.unsqueeze(0)
 
-        for di in range(max_length):
+        for di in range(MAX_LENGTH):
             if with_attention:
                 decoder_output, decoder_hidden, decoder_attention = decoder(
                     decoder_input, decoder_hidden, encoder_output)
