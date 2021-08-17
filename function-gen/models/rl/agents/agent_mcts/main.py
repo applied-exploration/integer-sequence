@@ -13,6 +13,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+from IPython.display import display
+
 
 from .trainer import Trainer
 from .policy import IntegerPolicy
@@ -30,41 +32,60 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 def train_mcts(env, num_epochs):
-        n_actions = env.action_space.n
-        n_obs = env.observation_space.shape[0]
+    n_actions = env.action_space.n
+    n_obs = env.observation_space.shape[0]
+
+    trainer = Trainer(lambda: IntegerPolicy(n_obs, 20, n_actions))
+    network = trainer.step_model
+
+    mem = ReplayMemory(200,
+                    { "ob": np.long,
+                        "pi": np.float32,
+                        "return": np.float32},
+                    { "ob": [n_obs],
+                        "pi": [n_actions],
+                        "return": []})
+
+    value_losses = []
+    policy_losses = []
+    total_rews = []
+
+    for i in range(num_epochs):
+        if i % 50 == 0: 
+            total_rew = test_agent(i, env, network)
+            total_rews.append(total_rew)
+            
+            fig, axs = plt.subplots(3, 1)
  
-        trainer = Trainer(lambda: IntegerPolicy(n_obs, 20, n_actions))
-        network = trainer.step_model
-
-        mem = ReplayMemory(200,
-                        { "ob": np.long,
-                            "pi": np.float32,
-                            "return": np.float32},
-                        { "ob": [n_obs],
-                            "pi": [n_actions],
-                            "return": []})
-
-        value_losses = []
-        policy_losses = []
-
-        for i in range(num_epochs):
-            if i % 50 == 0: test_agent(i, env, network)
-
-
-            obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env)   
-            print(obs)
-            print(pis)
-            print(returns)
+            axs[0].plot(value_losses)
+            axs[0].set_xlabel("epochs")
+            axs[0].set_ylabel("value loss")
+ 
+            axs[1].plot(policy_losses)
+            axs[1].set_xlabel("epochs")
+            axs[1].set_ylabel("policy loss")
             
-            mem.add_all({"ob": obs, "pi": pis, "return": returns})
-            batch = mem.get_minibatch()
 
-            vl, pl = trainer.train(batch["ob"], batch["pi"], batch["return"])
-            value_losses.append(vl)
-            policy_losses.append(pl)
-            
-        print(value_losses)
-        print(policy_losses)
+            axs[2].plot(total_rews)
+            axs[2].set_xlabel("epochs")
+            axs[2].set_ylabel("testing loss")
+
+            # fig.tight_layout()
+            plt.savefig("training_{}.jpg".format(num_epochs))
+            # plt.ion()
+            # plt.show(block=False)
+
+
+
+        obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env)   
+        
+        mem.add_all({"ob": obs, "pi": pis, "return": returns})
+        batch = mem.get_minibatch()
+
+        vl, pl = trainer.train(batch["ob"], batch["pi"], batch["return"])
+
+        value_losses.append(vl)
+        policy_losses.append(pl)
             
             
             
@@ -84,6 +105,8 @@ def test_agent(iteration, env, network):
         step_idx+=1
         total_rew += reward
     log(test_env, iteration, step_idx, total_rew)
+    
+    return total_rew
         
         
 def log(test_env, iteration, step_idx, total_rew):
