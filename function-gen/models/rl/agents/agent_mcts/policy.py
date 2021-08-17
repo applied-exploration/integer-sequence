@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class HillClimbingPolicy(nn.Module):
+class IntegerPolicy(nn.Module):
     """
     Simple neural network policy for solving the hill climbing task.
     Consists of one common dense layer for both policy and value estimate and
@@ -12,7 +12,7 @@ class HillClimbingPolicy(nn.Module):
     """
 
     def __init__(self, n_obs, n_hidden, n_actions):
-        super(HillClimbingPolicy, self).__init__()
+        super(IntegerPolicy, self).__init__()
 
         self.n_obs = n_obs
         self.n_hidden = n_hidden
@@ -36,6 +36,8 @@ class HillClimbingPolicy(nn.Module):
         # print(obs_one_hot)
         # h_relu = F.relu(self.dense1(obs_one_hot))
 
+        obs = obs.to(torch.float)
+        
         # print(obs.shape)
         h_relu = F.relu(self.dense1(obs))
         # print(h_relu.shape)
@@ -55,6 +57,8 @@ class HillClimbingPolicy(nn.Module):
         :return: Policy estimate [N, n_actions] and value estimate [N] for
         the given observations.
         """
+        
+        obs = np.array(obs, dtype=np.float32)
         obs = torch.from_numpy(obs)
         _, pi, v = self.forward(obs)
 

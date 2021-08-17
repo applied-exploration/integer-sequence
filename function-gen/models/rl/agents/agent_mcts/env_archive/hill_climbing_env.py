@@ -1,8 +1,8 @@
 import numpy as np
 import gym
 
-from utils import cprint
-from static_env import StaticEnv
+from .utils import cprint
+from .static_env import StaticEnv
 
 
 UP = 0
@@ -43,6 +43,8 @@ class HillClimbingEnv(gym.Env, StaticEnv):
 
         self.pos = (6, 0)
         self.step_idx = 0
+        
+        self.action_space = {"n":4}
 
     def reset(self):
         self.pos = (6, 0)
