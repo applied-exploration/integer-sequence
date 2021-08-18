@@ -1,4 +1,4 @@
-from .MCTS import MCTS
+from .mcts import MCTS
 
 import random as rd
 import numpy as np
