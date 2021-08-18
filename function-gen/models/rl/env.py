@@ -167,9 +167,9 @@ class IntegerSequenceEnv(gym.Env):
         return np.array(states)
 
     def get_valid_actions(self, state):
-        unflattened_state = [state[:9], state[9:]]
+        # unflattened_state = [state[:9], state[9:]]
         all_actions = [i for i in range(0, self.output_lang.n_words)]
-        valid_actions = [action for action in all_actions if is_action_valid(unflattened_state, action, self.output_lang) == True]
+        valid_actions = [action for action in all_actions if is_action_valid(state, action, self.output_lang) == True]
         return valid_actions
 
 

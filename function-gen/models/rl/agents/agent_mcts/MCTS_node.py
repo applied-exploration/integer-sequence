@@ -142,7 +142,11 @@ class MCTSNode:
             if not current.is_expanded:
                 break
             # Choose action with highest score.
-            best_move = np.argmax(current.child_action_score)
+            possible_actions = self.TreeEnv.get_valid_actions(current.state)
+            action_scores = [score if i in possible_actions else 0 for i, score in enumerate(current.child_action_score)]
+            # print("\n\npossible_actions", possible_actions, "for state ", current.state)
+            # print("\naction scores: ", action_scores)
+            best_move = np.argmax(action_scores)
             current = current.maybe_add_child(best_move)
         return current
 
