@@ -118,6 +118,7 @@ class IntegerSequenceEnv(gym.Env):
         self.output_lang = env_config["output_lang"]
         self.evaluate = evaluate_candidate_eq#env_config["evaluate"]
         self.data = env_config["data"]
+        self.penalty_at_end = env_config["penalty_at_end"]
         self.state, self.unflattened_state = create_initial_state(self.input_lang, self.data, self.output_length)
 
         print("self.state")
@@ -135,13 +136,16 @@ class IntegerSequenceEnv(gym.Env):
         self.unflattened_state = insert_action_in_state((self.unflattened_state[0].copy(), self.unflattened_state[1]), action)
         self.state = flatten(self.unflattened_state)
 
-        if not is_action_valid(self.unflattened_state, action, self.output_lang):
+        if not self.penalty_at_end and not is_action_valid(self.unflattened_state, action, self.output_lang):
             return (self.state, -MAX_PENALTY_MAGNITUDE, True, {})
 
         if is_state_complete(self.unflattened_state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.unflattened_state[0]))
             score = self.evaluate(candidate_eq, self.unflattened_state[1])
-            return (self.state, score, True, {})
+            
+            if not is_action_valid(self.unflattened_state, action, self.output_lang):
+                return (self.state, -MAX_PENALTY_MAGNITUDE, True, {})
+            else: return (self.state, score, True, {})
         
         return (self.state, 0, False, {})
  
