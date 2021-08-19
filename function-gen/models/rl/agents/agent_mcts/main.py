@@ -13,6 +13,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 from IPython.display import display
 
 
@@ -31,11 +32,11 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
-def train_mcts(env, num_epochs):
+def train_mcts(env, num_epochs, policy=None):
     n_actions = env.action_space.n
     n_obs = env.observation_space.shape[0]
 
-    trainer = Trainer(lambda: IntegerPolicy(n_obs, 20, n_actions))
+    trainer = Trainer(lambda: IntegerPolicy(n_obs, 20, n_actions) if policy is None else policy)
     network = trainer.step_model
 
     mem = ReplayMemory(200,
@@ -51,12 +52,13 @@ def train_mcts(env, num_epochs):
     total_rews = []
 
     for i in range(num_epochs):
-        if i % 50 == 0: 
+        
+        if i % 100 == 0: 
             total_rew = test_agent(i, env, network)
             total_rews.append(total_rew)
             
             fig, axs = plt.subplots(3, 1)
- 
+   
             axs[0].plot(value_losses)
             axs[0].set_xlabel("epochs")
             axs[0].set_ylabel("value loss")
@@ -70,23 +72,20 @@ def train_mcts(env, num_epochs):
             axs[2].set_xlabel("epochs")
             axs[2].set_ylabel("testing loss")
 
-            # fig.tight_layout()
             plt.savefig("training_{}.jpg".format(num_epochs))
-            # plt.ion()
-            # plt.show(block=False)
 
 
 
         obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env)   
         
         mem.add_all({"ob": obs, "pi": pis, "return": returns})
-        batch = mem.get_minibatch()
+        batch = mem.get_minibatch(batch_size=2)
 
         vl, pl = trainer.train(batch["ob"], batch["pi"], batch["return"])
 
-        value_losses.append(vl)
-        policy_losses.append(pl)
-            
+        value_losses.append(min(vl.item(), 1))
+        policy_losses.append(pl.item())
+
             
             
             

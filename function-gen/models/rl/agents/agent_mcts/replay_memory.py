@@ -83,12 +83,13 @@ class ReplayMemory:
         self.count = max(self.count, min(self.current + num, self.size))
         self.current = (self.current + num) % self.size
 
-    def get_minibatch(self):
+    def get_minibatch(self, batch_size = None):
         """
         Returns a batch of experience tuples for training.
         :return: Dictionary containing a numpy array for each column.
         """
-        indices = np.random.choice(self.count, self.batch_size)
+        num_elements = batch_size if batch_size is not None else self.batch_size
+        indices = np.random.choice(self.count, num_elements)
         minibatch = {}
         for column_name in self.columns.keys():
             minibatch[column_name] = self.columns[column_name][indices]

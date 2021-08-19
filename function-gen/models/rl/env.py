@@ -13,7 +13,7 @@ import random
 import numpy as np
 
 
-MAX_PENALTY_MAGNITUDE = 999.0
+MAX_PENALTY_MAGNITUDE = 100.0
 
 def index_of_first(lst, pred):
     for i,v in enumerate(lst):
@@ -76,8 +76,10 @@ def get_current_position(state: TreeState) -> int:
 
 def is_action_valid(state: TreeState, action: int, output_lang: Lang) -> bool:
     pos = get_current_position(state)
-    if pos == 0: return True
-    last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
+    if pos == 0:
+        last_char = ""
+    else:
+        last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
     possibilities = list_possibilities(last_char)
     next_char = decode_with_lang(output_lang, [action])[0]
     if next_char in possibilities:

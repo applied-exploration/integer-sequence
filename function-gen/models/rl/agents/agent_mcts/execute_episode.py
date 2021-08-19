@@ -1,4 +1,4 @@
-from .mcts import MCTS
+from .MCTS import MCTS
 
 import random as rd
 import numpy as np
@@ -43,12 +43,14 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
         while mcts.root.N < current_simulations + num_simulations:
             mcts.tree_search()
 
+        
         action = mcts.pick_action()
         mcts.take_action(action)
 
         if mcts.root.terminal:
             break
-
+    
+    # mcts.root.print_tree()
     # Computes the returns at each step from the list of rewards obtained at
     # each step. The return is the sum of rewards obtained *after* the step.
     # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
@@ -64,6 +66,8 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
     # obs = np.concatenate(mcts.obs)
     obs = np.array(mcts.obs)
     searches_pi = np.array(mcts.searches_pi)
+    
+   
     
     # print("OBS")
     # print(mcts.obs)
