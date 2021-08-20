@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from utils import dec2bin, BINARY_NUM
+from utils import dec2bin_sequence, BINARY_NUM
 import numpy as np
 import torch
 import torch.nn as nn
@@ -45,7 +45,8 @@ class IntegerPolicy(nn.Module):
         # encode the observation in binary, and flatten it
         obs_encoded = torch.empty((obs.shape[0], obs.shape[1] * BINARY_NUM))
         for i in range(obs.shape[0]):
-            obs_encoded[i] = dec2bin(obs[i].to(dtype=torch.long), BINARY_NUM).flatten()
+            obs_encoded[i] = dec2bin_sequence(obs[i].to(dtype=torch.long), BINARY_NUM).flatten()
+
 
         h_relu = F.relu(self.dense1(obs_encoded))
         # print(h_relu.shape)

@@ -153,13 +153,26 @@ def remove_key(d, key):
     del r[key]
     return r
 
+
+def dec2bin_sequence(x: torch.tensor, bits: int) -> torch.tensor:
+    b = []
+    for i in range(x.shape[0]):
+        b.append(dec2bin(x[i].unsqueeze(0), BINARY_NUM))
+    return torch.cat(b).flatten()
+
 def dec2bin(x: torch.tensor, bits: int) -> torch.tensor:
-    mask = 2 ** torch.arange(bits - 1, -1, -1).to(x.device, x.dtype)
-    return x.unsqueeze(-1).bitwise_and(mask).ne(0).float()
+    # calculate the sign bit
+    sign = torch.tensor([[0 if x.signbit() == False else 1]])
+    if x.signbit() == True:
+        x = x.abs()
+    # and the binary version of the num
+    mask = 2 ** torch.arange(bits - 2, -1, -1).to(x.device, x.dtype)
+    encoded = x.unsqueeze(-1).bitwise_and(mask).ne(0).float()
+    return torch.cat((sign, encoded), dim = 1)
 
-
-def bin2dec(b: torch.tensor, bits: int) -> torch.tensor:
-    mask = 2 ** torch.arange(bits - 1, -1, -1).to(b.device, b.dtype)
-    return torch.sum(mask * b, -1)
+# commented out as its outdated and we don't use it (hopefully ever). need to support the first "sign" bit if we want to get it working
+# def bin2dec(b: torch.tensor, bits: int) -> torch.tensor:
+#     mask = 2 ** torch.arange(bits - 2, -1, -1).to(b.device, b.dtype)
+#     return torch.sum(mask * b, -1)
 
 BINARY_NUM = 20
