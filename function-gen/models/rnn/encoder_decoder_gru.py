@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -5,19 +8,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from typing import List, Tuple
+from utils import BINARY_NUM, dec2bin, bin2dec
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def dec2bin(x, bits):
-    mask = 2 ** torch.arange(bits - 1, -1, -1).to(x.device, x.dtype)
-    return x.unsqueeze(-1).bitwise_and(mask).ne(0).float()
-
-
-def bin2dec(b, bits):
-    mask = 2 ** torch.arange(bits - 1, -1, -1).to(b.device, b.dtype)
-    return torch.sum(mask * b, -1)
-
-BINARY_NUM = 32
 
 class EncoderRNN(nn.Module):
 

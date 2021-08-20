@@ -1,7 +1,7 @@
 from random import choice
 from typing import List
-import wandb
 import numpy as np
+import torch
 
 def flatten(list_of_lists):
     valid_lists = all(isinstance(elem, (list, np.ndarray, tuple)) for elem in list_of_lists)
@@ -152,3 +152,14 @@ def remove_key(d, key):
     r = dict(d)
     del r[key]
     return r
+
+def dec2bin(x: torch.tensor, bits: int) -> torch.tensor:
+    mask = 2 ** torch.arange(bits - 1, -1, -1).to(x.device, x.dtype)
+    return x.unsqueeze(-1).bitwise_and(mask).ne(0).float()
+
+
+def bin2dec(b: torch.tensor, bits: int) -> torch.tensor:
+    mask = 2 ** torch.arange(bits - 1, -1, -1).to(b.device, b.dtype)
+    return torch.sum(mask * b, -1)
+
+BINARY_NUM = 20

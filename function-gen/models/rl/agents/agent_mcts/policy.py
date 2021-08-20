@@ -1,3 +1,7 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
+from utils import dec2bin, BINARY_NUM
 import numpy as np
 import torch
 import torch.nn as nn
@@ -37,7 +41,10 @@ class IntegerPolicy(nn.Module):
         # h_relu = F.relu(self.dense1(obs_one_hot))
 
         obs = obs.to(torch.float)
-        
+        print(obs)
+        obs_encoded = dec2bin(obs.squeeze(1).to(dtype=torch.long), BINARY_NUM).squeeze(1)
+        print(obs_encoded)
+
         # print(obs.shape)
         h_relu = F.relu(self.dense1(obs))
         # print(h_relu.shape)
