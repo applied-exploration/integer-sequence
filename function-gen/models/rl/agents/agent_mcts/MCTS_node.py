@@ -142,7 +142,11 @@ class MCTSNode:
             if not current.is_expanded:
                 break
             # Choose action with highest score.
-            best_move = np.argmax(current.child_action_score)
+            possible_actions = self.TreeEnv.get_valid_actions(current.state)
+            action_scores = [score if i in possible_actions else 0 for i, score in enumerate(current.child_action_score)]
+            # print("\n\npossible_actions", possible_actions, "for state ", current.state)
+            # print("\naction scores: ", action_scores)
+            best_move = np.argmax(action_scores)
             current = current.maybe_add_child(best_move)
         return current
 
@@ -260,11 +264,11 @@ class MCTSNode:
     def print_tree(self, level=0):
         node_string = "\033[94m|" + "----"*level
         node_string += "Node: action={}\033[0m".format(self.action)
-        node_string += "\n• state:\n{}".format(flatten(self.state))
-        node_string += "\n• N={}".format(self.N)
-        node_string += "\n• score:\n{}".format(self.child_action_score)
-        node_string += "\n• Q:\n{}".format(self.child_Q)
-        node_string += "\n• P:\n{}".format(self.child_prior)
+        # node_string += "\n• state:\n{}".format(flatten(self.state))
+        # node_string += "\n• N={}".format(self.N)
+        # node_string += "\n• score:\n{}".format(self.child_action_score)
+        # node_string += "\n• Q:\n{}".format(self.child_Q)
+        # node_string += "\n• P:\n{}".format(self.child_prior)
         print(node_string)
         for _, child in sorted(self.children.items()):
             child.print_tree(level+1)

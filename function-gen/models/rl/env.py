@@ -13,7 +13,7 @@ import random
 import numpy as np
 
 
-MAX_PENALTY_MAGNITUDE = 999.0
+MAX_PENALTY_MAGNITUDE = 100.0
 
 def index_of_first(lst, pred):
     for i,v in enumerate(lst):
@@ -76,8 +76,10 @@ def get_current_position(state: TreeState) -> int:
 
 def is_action_valid(state: TreeState, action: int, output_lang: Lang) -> bool:
     pos = get_current_position(state)
-    if pos == 0: return True
-    last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
+    if pos == 0:
+        last_char = ""
+    else:
+        last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
     possibilities = list_possibilities(last_char)
     next_char = decode_with_lang(output_lang, [action])[0]
     if next_char in possibilities:
@@ -118,6 +120,7 @@ class IntegerSequenceEnv(gym.Env):
         self.output_lang = env_config["output_lang"]
         self.evaluate = evaluate_candidate_eq#env_config["evaluate"]
         self.data = env_config["data"]
+        self.penalty_at_end = env_config["penalty_at_end"]
         self.state, self.unflattened_state = create_initial_state(self.input_lang, self.data, self.output_length)
 
         print("self.state")
@@ -135,13 +138,16 @@ class IntegerSequenceEnv(gym.Env):
         self.unflattened_state = insert_action_in_state((self.unflattened_state[0].copy(), self.unflattened_state[1]), action)
         self.state = flatten(self.unflattened_state)
 
-        if not is_action_valid(self.unflattened_state, action, self.output_lang):
+        if not self.penalty_at_end and not is_action_valid(self.unflattened_state, action, self.output_lang):
             return (self.state, -MAX_PENALTY_MAGNITUDE, True, {})
 
         if is_state_complete(self.unflattened_state):
             candidate_eq = ''.join(decode_with_lang(self.output_lang, self.unflattened_state[0]))
             score = self.evaluate(candidate_eq, self.unflattened_state[1])
-            return (self.state, score, True, {})
+            
+            if not is_action_valid(self.unflattened_state, action, self.output_lang):
+                return (self.state, -MAX_PENALTY_MAGNITUDE, True, {})
+            else: return (self.state, score, True, {})
         
         return (self.state, 0, False, {})
  
@@ -161,6 +167,13 @@ class IntegerSequenceEnv(gym.Env):
         # print(states)
         # print(np.array(*states))
         return np.array(states)
+
+    def get_valid_actions(self, state):
+        # unflattened_state = [state[:9], state[9:]]
+        all_actions = [i for i in range(0, self.output_lang.n_words)]
+        valid_actions = [action for action in all_actions if is_action_valid(state, action, self.output_lang) == True]
+        return valid_actions
+
 
     # @staticmethod
     def next_state(self, state, action, shape=(7, 7)):

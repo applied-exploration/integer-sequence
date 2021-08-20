@@ -1,9 +1,14 @@
 from random import choice
 from typing import List
 import wandb
+import numpy as np
 
 def flatten(list_of_lists):
-    return [item for sublist in list_of_lists for item in sublist]
+    valid_lists = all(isinstance(elem, (list, np.ndarray, tuple)) for elem in list_of_lists)
+    
+    if valid_lists:
+        return [item for sublist in list_of_lists for item in sublist]
+    else: return list_of_lists
 
 def generate_random_eq(length: int) -> str:
     def generate_next(prev: str) -> str:
