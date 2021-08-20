@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from typing import List, Tuple
-from utils import BINARY_NUM, dec2bin, bin2dec
+from utils import BINARY_NUM, dec2bin
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
