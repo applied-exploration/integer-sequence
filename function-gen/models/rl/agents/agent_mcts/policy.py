@@ -1,3 +1,7 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
+from utils import dec2bin_sequence, BINARY_NUM
 import numpy as np
 import torch
 import torch.nn as nn
@@ -18,7 +22,7 @@ class IntegerPolicy(nn.Module):
         self.n_hidden = n_hidden
         self.n_actions = n_actions
 
-        self.dense1 = nn.Linear(n_obs, n_hidden)
+        self.dense1 = nn.Linear(n_obs * BINARY_NUM, n_hidden)
         self.dense_p = nn.Linear(n_hidden, n_actions)
         self.dense_v = nn.Linear(n_hidden, 1)
 
@@ -37,9 +41,14 @@ class IntegerPolicy(nn.Module):
         # h_relu = F.relu(self.dense1(obs_one_hot))
 
         obs = obs.to(torch.float)
-        
-        # print(obs.shape)
-        h_relu = F.relu(self.dense1(obs))
+
+        # encode the observation in binary, and flatten it
+        obs_encoded = torch.empty((obs.shape[0], obs.shape[1] * BINARY_NUM))
+        for i in range(obs.shape[0]):
+            obs_encoded[i] = dec2bin_sequence(obs[i].to(dtype=torch.long), BINARY_NUM).flatten()
+
+
+        h_relu = F.relu(self.dense1(obs_encoded))
         # print(h_relu.shape)
         logits = self.dense_p(h_relu)
         # print(logits.shape)
