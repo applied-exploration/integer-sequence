@@ -137,5 +137,18 @@ class MCTS:
         # Resulting state becomes new root of the tree.
         self.root = self.root.maybe_add_child(action)
         del self.root.parent.children
+        
+        return reward
+    
+    def save_last_ob(self):
+        ob = self.TreeEnv.get_obs_for_states(flatten(self.root.state))
+
+        self.obs.append(ob)
+        self.searches_pi.append(
+            self.root.visits_as_probs()) # TODO: Use self.root.position.n < self.temp_threshold as argument
+        self.qs.append(self.root.Q)
+        reward = self.root.reward#(self.TreeEnv.get_return(self.root.children[action].state, self.root.children[action].depth)- sum(self.rewards))
+        self.rewards.append(reward)
+        
 
 

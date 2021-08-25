@@ -21,6 +21,7 @@ from .trainer import Trainer
 from .policy import IntegerPolicy
 from .replay_memory import ReplayMemory
 # from hill_climbing_env import HillClimbingEnv
+from .MCTS import MCTS
 
 # from lang import load_data_int_seq
 # from models.rl.env import IntegerSequenceEnv
@@ -28,11 +29,15 @@ from .execute_episode import execute_episode
 
 from utils import flatten
 
-import os    
+import sys, os    
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'rl')))
 
-def train_mcts(env, num_epochs, policy=None):
+from rl.env import decode_with_lang
+
+
+def train_mcts(env, num_epochs, policy=None, test=False):
     n_actions = env.action_space.n
     n_obs = env.observation_space.shape[0]
 
@@ -52,8 +57,7 @@ def train_mcts(env, num_epochs, policy=None):
     total_rews = []
 
     for i in range(num_epochs):
-        
-        if i % 100 == 0: 
+        if i % 50 == 0: 
             total_rew = test_agent(i, env, network)
             total_rews.append(total_rew)
             
@@ -74,12 +78,13 @@ def train_mcts(env, num_epochs, policy=None):
 
             plt.savefig("training_{}.jpg".format(num_epochs))
 
+            if test: break
 
 
-        obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env)   
+        obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env, iteration=i)   
         
         mem.add_all({"ob": obs, "pi": pis, "return": returns})
-        batch = mem.get_minibatch(batch_size=2)
+        batch = mem.get_minibatch(batch_size=None)
 
         vl, pl = trainer.train(batch["ob"], batch["pi"], batch["return"])
 
@@ -91,24 +96,31 @@ def train_mcts(env, num_epochs, policy=None):
             
 def test_agent(iteration, env, network):
     print("Testing Agent")
-    test_env = env
-    total_rew = 0
-    state, reward, done, _ = test_env.reset()
-    step_idx = 0
-    while not done:
-        log(test_env, iteration, step_idx, total_rew)
-        p, _ = network.step(np.array([flatten(state)]).astype(np.float32))
-
-        action = np.argmax(p)
-        state, reward, done, _ = test_env.step(action)
-        step_idx+=1
-        total_rew += reward
-    log(test_env, iteration, step_idx, total_rew)
     
-    return total_rew
+    _, __, ___, total_reward, ____  = execute_episode(network, 32, env, log = log, test = True, iteration = iteration)  
+    
+    return total_reward
+
+# def test_agent(iteration, env, network):
+#     print("Testing Agent")
+#     test_env = env
+#     total_rew = 0
+#     state, reward, done, _ = test_env.reset()
+#     step_idx = 0
+#     while not done:
+#         log(test_env, iteration, step_idx, total_rew)
+#         p, _ = network.step(np.array([flatten(state)]).astype(np.float32))
+
+#         action = np.argmax(p)
+#         state, reward, done, _ = test_env.step(action)
+#         step_idx+=1
+#         total_rew += reward
+#     log(test_env, iteration, step_idx, total_rew)
+    
+#     return total_rew
         
         
-def log(test_env, iteration, step_idx, total_rew):
+def log(obs, iteration, step_idx, total_rew, env, action = None):
     """
     Logs one step in a testing episode.
     :param test_env: Test environment that should be rendered.
@@ -119,7 +131,14 @@ def log(test_env, iteration, step_idx, total_rew):
     time.sleep(0.3)
     print()
     print(f"Training Episodes: {iteration}")
-    test_env.render()
+    print(f"Action: {action}")
+    print(f"State:")
+    print(f"{obs}")
+    if action is not None:
+        decoded_obs = [decode_with_lang(env.output_lang, ob) for ob in obs]
+        print(f"{decoded_obs[-1][:9]}")
+    # test_env.render()
     print(f"Step: {step_idx}")
     print(f"Return: {total_rew}")
+    
 

@@ -58,7 +58,7 @@ def encode_with_lang(lang: Lang, input):
     return [lang.word2index[word] for word in list(input)]
 
 def decode_with_lang(lang: Lang, input):
-    return [lang.index2word[word] for word in list(input)]
+    return [lang.index2word[word] if word>=0 else -1 for word in list(input)]
 
 def create_initial_state(input_lang: Lang, data: List[List[int]], output_length: int) -> TreeState:
     int_seq = random.choice(data)[0]
@@ -75,16 +75,29 @@ def get_current_position(state: TreeState) -> int:
     return index
 
 def is_action_valid(state: TreeState, action: int, output_lang: Lang) -> bool:
+    
     pos = get_current_position(state)
     if pos == 0:
         last_char = ""
     else:
         last_char = decode_with_lang(output_lang, [state[0][pos-1]])[0]
+    
     possibilities = list_possibilities(last_char)
+
     next_char = decode_with_lang(output_lang, [action])[0]
+
+    
     if next_char in possibilities:
+        # print("valid")
         return True
     else:
+        # print()
+        # print("=====")
+        # print("pos " , pos)
+        # print("last_char ", last_char)
+        # print("possibilities ", possibilities)
+        # print("action " , action, " ===> '", next_char, "'")
+        # print("BAD")
         return False
     
     
@@ -112,6 +125,7 @@ class IntegerSequenceEnv(gym.Env):
     output_lang: Lang
 
     state: TreeState
+    #            01234567890123
     syms = list('+*-0123456789t')
 
     def __init__(self, env_config):
@@ -133,7 +147,7 @@ class IntegerSequenceEnv(gym.Env):
 
     def step(self, action):
         # offset action by 2, because we don't need SOS and EOS tokens here
-        action = action + 2
+        # action = action + 2
         
         self.unflattened_state = insert_action_in_state((self.unflattened_state[0].copy(), self.unflattened_state[1]), action)
         self.state = flatten(self.unflattened_state)
@@ -176,19 +190,28 @@ class IntegerSequenceEnv(gym.Env):
 
 
     # @staticmethod
-    def next_state(self, state, action, shape=(7, 7)):
-        action = action + 2
+    def next_state(self, state, action):
+        # action = action + 2
+        # print("ENV NEXT STATE")
         if not is_action_valid(state, action, self.output_lang):
+            # print("action wasn't valid")
+            # print(state)
+            # print(action, " ===> ", decode_with_lang(self.output_lang, [action]))
             return (insert_action_in_state((state[0].copy(), state[1]), action), -MAX_PENALTY_MAGNITUDE, True, {})
 
         state = insert_action_in_state((state[0].copy(), state[1]), action)
         if is_state_complete(state):
+            # print("======")
+            # print("state is complete")
+            # print(state)
             candidate_eq = ''.join(decode_with_lang(self.output_lang, state[0]))
             score = self.evaluate(candidate_eq, state[1])
+            # print(candidate_eq)
+            
+            # print(score)
             return (state, score, True, {})
         
         return (state, 0, False, {})
-        # return pos[0] * shape[0] + pos[1]
 
 
 
