@@ -147,8 +147,8 @@ class MCTS:
         self.searches_pi.append(
             self.root.visits_as_probs()) # TODO: Use self.root.position.n < self.temp_threshold as argument
         self.qs.append(self.root.Q)
-        reward = self.root.reward#(self.TreeEnv.get_return(self.root.children[action].state, self.root.children[action].depth)- sum(self.rewards))
-        self.rewards.append(reward)
+        #reward = self.root.reward#(self.TreeEnv.get_return(self.root.children[action].state, self.root.children[action].depth)- sum(self.rewards))
+        self.rewards.append(0)
         
 
 

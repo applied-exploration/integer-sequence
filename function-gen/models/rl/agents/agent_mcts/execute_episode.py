@@ -62,7 +62,6 @@ def execute_episode(agent_netw, num_simulations, TreeEnv, log = None, test = Fal
             mcts.save_last_ob()
             break
     
-    # mcts.root.print_tree()
     # Computes the returns at each step from the list of rewards obtained at
     # each step. The return is the sum of rewards obtained *after* the step.
     # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
