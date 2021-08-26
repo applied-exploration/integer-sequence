@@ -4,7 +4,8 @@ import random as rd
 import numpy as np
 from utils import flatten
 
-def execute_episode(agent_netw, num_simulations, TreeEnv):
+
+def execute_episode(agent_netw, num_simulations, TreeEnv, log = None, test = False, iteration=0):
     """
     Executes a single episode of the task using Monte-Carlo tree search with
     the given agent network. It returns the experience tuples collected during
@@ -34,46 +35,47 @@ def execute_episode(agent_netw, num_simulations, TreeEnv):
     probs, vals = agent_netw.step(np.array([observations_for_states]))
     first_node.incorporate_estimates(probs[0], vals[0], first_node)
 
+    if log:
+        step_idx = 0
+        reward = 0
+        action = None
+    
     while True:
-        mcts.root.inject_noise()
+        if log: 
+            # log(np.array(mcts.obs), iteration, step_idx, reward, action)
+            step_idx += 1
+        if test: mcts.root.print_tree()
+        
+        if not test: mcts.root.inject_noise()
         current_simulations = mcts.root.N
 
         # We want `num_simulations` simulations per action not counting
         # simulations from previous actions.
         while mcts.root.N < current_simulations + num_simulations:
             mcts.tree_search()
-
+        
         
         action = mcts.pick_action()
-        mcts.take_action(action)
+        reward = mcts.take_action(action)
 
         if mcts.root.terminal:
+            mcts.save_last_ob()
             break
     
-    # mcts.root.print_tree()
     # Computes the returns at each step from the list of rewards obtained at
     # each step. The return is the sum of rewards obtained *after* the step.
     # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
     #        in range(len(mcts.rewards))]
     ret = np.cumsum(mcts.rewards[::-1])[::-1]
-    # print("ret")
-    # print(ret)
-
-
+    
+    print(ret)
         
 
     total_rew = np.sum(mcts.rewards)
-    # obs = np.concatenate(mcts.obs)
     obs = np.array(mcts.obs)
     searches_pi = np.array(mcts.searches_pi)
     
-   
+    if log: 
+        log(obs, iteration, step_idx, total_rew, TreeEnv, action)
     
-    # print("OBS")
-    # print(mcts.obs)
-    # print(obs.shape)
-    # print(mcts.searches_pi)
-    # print(ret.shape)
-    # print(total_rew.shape)
-
     return (obs, searches_pi, ret, total_rew, mcts.root.state)

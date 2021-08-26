@@ -36,20 +36,19 @@ def generate_random_eq_valid(length: int) -> str:
 
 
 def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
-    try:
+    # try:
         # if "t" not in eq:
         #     return False
         results = [eval(eq.replace('t', str(num))) for num in test_set]
-        if len(set(results)) == 1:
-            return False
-        elif zoo in results:
-            return False
-        elif nan in results:
+
+        # if len(set(results)) == 1: # check if numbers are the same in the sequence
+        #     return False
+        if np.isnan(results).any():
             return False
         else:
             return True
-    except:
-        return False
+    # except:
+    #     return False
 
 
 def eq_to_seq(eq: str, length: int) -> List[int]:

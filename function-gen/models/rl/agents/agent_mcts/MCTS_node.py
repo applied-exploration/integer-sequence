@@ -143,10 +143,11 @@ class MCTSNode:
                 break
             # Choose action with highest score.
             possible_actions = self.TreeEnv.get_valid_actions(current.state)
-            action_scores = [score if i in possible_actions else 0 for i, score in enumerate(current.child_action_score)]
+            action_scores = [score if i in possible_actions else float('-inf') for i, score in enumerate(current.child_action_score)]
             # print("\n\npossible_actions", possible_actions, "for state ", current.state)
             # print("\naction scores: ", action_scores)
             best_move = np.argmax(action_scores)
+            # print("=====> best_move ", best_move)
             current = current.maybe_add_child(best_move)
         return current
 
@@ -263,7 +264,7 @@ class MCTSNode:
 
     def print_tree(self, level=0):
         node_string = "\033[94m|" + "----"*level
-        node_string += "Node: action={}\033[0m".format(self.action)
+        node_string += "Node: action={}   | N={}\033[0m".format(self.action, self.N)
         # node_string += "\n• state:\n{}".format(flatten(self.state))
         # node_string += "\n• N={}".format(self.N)
         # node_string += "\n• score:\n{}".format(self.child_action_score)
