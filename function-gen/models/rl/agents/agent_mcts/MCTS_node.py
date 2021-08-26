@@ -264,7 +264,7 @@ class MCTSNode:
 
     def print_tree(self, level=0):
         node_string = "\033[94m|" + "----"*level
-        node_string += "Node: action={}\033[0m".format(self.action)
+        node_string += "Node: action={}   | N={}\033[0m".format(self.action, self.N)
         # node_string += "\n• state:\n{}".format(flatten(self.state))
         # node_string += "\n• N={}".format(self.N)
         # node_string += "\n• score:\n{}".format(self.child_action_score)

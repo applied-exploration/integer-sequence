@@ -58,9 +58,6 @@ def train_mcts(env, num_epochs, policy=None, test=False):
 
     for i in range(num_epochs):
         if i % 50 == 0: 
-            total_rew = test_agent(i, env, network)
-            total_rews.append(total_rew)
-            
             fig, axs = plt.subplots(3, 1)
    
             axs[0].plot(value_losses)
@@ -71,6 +68,8 @@ def train_mcts(env, num_epochs, policy=None, test=False):
             axs[1].set_xlabel("epochs")
             axs[1].set_ylabel("policy loss")
             
+            total_rew = test_agent(i, env, network)
+            total_rews.append(total_rew)
 
             axs[2].plot(total_rews)
             axs[2].set_xlabel("epochs")
@@ -81,7 +80,7 @@ def train_mcts(env, num_epochs, policy=None, test=False):
             if test: break
 
 
-        obs, pis, returns, tot_reward, done_state = execute_episode(network, 32, env, iteration=i)   
+        obs, pis, returns, tot_reward, done_state = execute_episode(network, 64, env, iteration=i)   
         
         mem.add_all({"ob": obs, "pi": pis, "return": returns})
         batch = mem.get_minibatch(batch_size=None)
@@ -97,7 +96,7 @@ def train_mcts(env, num_epochs, policy=None, test=False):
 def test_agent(iteration, env, network):
     print("Testing Agent")
     
-    _, __, ___, total_reward, ____  = execute_episode(network, 32, env, log = log, test = True, iteration = iteration)  
+    _, __, ___, total_reward, ____  = execute_episode(network, 64, env, log = log, test = True, iteration = iteration)  
     
     return total_reward
 
@@ -132,11 +131,11 @@ def log(obs, iteration, step_idx, total_rew, env, action = None):
     print()
     print(f"Training Episodes: {iteration}")
     print(f"Action: {action}")
-    print(f"State:")
-    print(f"{obs}")
     if action is not None:
-        decoded_obs = [decode_with_lang(env.output_lang, ob) for ob in obs]
-        print(f"{decoded_obs[-1][:9]}")
+        print(f"State:")
+        print(f"{obs[-1]}")
+        decoded_obs = decode_with_lang(env.output_lang, obs[-1][:9]) 
+        print(f"{decoded_obs}")
     # test_env.render()
     print(f"Step: {step_idx}")
     print(f"Return: {total_rew}")

@@ -13,7 +13,7 @@ import random
 import numpy as np
 
 
-MAX_PENALTY_MAGNITUDE = 100.0
+MAX_PENALTY_MAGNITUDE = 900.0
 
 def index_of_first(lst, pred):
     for i,v in enumerate(lst):
@@ -88,16 +88,8 @@ def is_action_valid(state: TreeState, action: int, output_lang: Lang) -> bool:
 
     
     if next_char in possibilities:
-        # print("valid")
         return True
     else:
-        # print()
-        # print("=====")
-        # print("pos " , pos)
-        # print("last_char ", last_char)
-        # print("possibilities ", possibilities)
-        # print("action " , action, " ===> '", next_char, "'")
-        # print("BAD")
         return False
     
     

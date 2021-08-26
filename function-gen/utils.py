@@ -41,9 +41,9 @@ def is_eq_valid(eq: str, test_set: List[int] = [1,2,4,5,10]) -> bool:
         #     return False
         results = [eval(eq.replace('t', str(num))) for num in test_set]
 
-        if len(set(results)) == 1:
-            return False
-        elif np.isnan(results).any():
+        # if len(set(results)) == 1: # check if numbers are the same in the sequence
+        #     return False
+        if np.isnan(results).any():
             return False
         else:
             return True

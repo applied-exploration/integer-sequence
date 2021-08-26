@@ -44,7 +44,7 @@ def execute_episode(agent_netw, num_simulations, TreeEnv, log = None, test = Fal
         if log: 
             # log(np.array(mcts.obs), iteration, step_idx, reward, action)
             step_idx += 1
-        # if test: mcts.root.print_tree()
+        if test: mcts.root.print_tree()
         
         if not test: mcts.root.inject_noise()
         current_simulations = mcts.root.N
@@ -67,6 +67,8 @@ def execute_episode(agent_netw, num_simulations, TreeEnv, log = None, test = Fal
     # ret = [TreeEnv.get_return(mcts.root.state, mcts.root.depth) for _
     #        in range(len(mcts.rewards))]
     ret = np.cumsum(mcts.rewards[::-1])[::-1]
+    
+    print(ret)
         
 
     total_rew = np.sum(mcts.rewards)
